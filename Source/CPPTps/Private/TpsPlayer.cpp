@@ -6,7 +6,6 @@
 #include <Camera/CameraComponent.h>
 #include <GameFramework/CharacterMovementComponent.h>
 
-
 // Sets default values
 ATpsPlayer::ATpsPlayer()
 {
