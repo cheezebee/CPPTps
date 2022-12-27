@@ -38,12 +38,20 @@ public:
 	float h = 0;
 	float v = 0;
 
+	//마우스 움직임에 따른 값 셋팅
+	float mx = 0;
+	float my = 0;
+
 	float walkSpeed = 600;
 
 public:
+
+	void MoveAction(float deltaTime);
+	void RotateAction();
+
 	void InputHorizontal(float value);
 	void InputVertical(float value);
 	void InputLookUp(float value);
 	void InputTurn(float value);
-
+	void InputJump();
 };
