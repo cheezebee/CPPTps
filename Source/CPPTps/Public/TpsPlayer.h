@@ -34,6 +34,21 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UCameraComponent* compCam;
 
+	UPROPERTY(EditAnywhere)
+	class USkeletalMeshComponent* compRifle;
+
+	UPROPERTY(EditAnywhere)
+	class UStaticMeshComponent* compSniper;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class ABullet> bulletFactory;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UUserWidget> sniperUIFactory;
+
+	UPROPERTY()
+	class UUserWidget* sniperUI;
+
 	//W, A, S, D 키에 따른 값 셋팅
 	float h = 0;
 	float v = 0;
@@ -54,4 +69,11 @@ public:
 	void InputLookUp(float value);
 	void InputTurn(float value);
 	void InputJump();
+	void InputFire();
+	void InputRifle();
+	void InputSniper();
+	void ChangeWeapon(bool useSniper);
+
+	void InputZoomIn();
+	void InputZoomOut();
 };

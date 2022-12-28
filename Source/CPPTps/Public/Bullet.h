@@ -34,4 +34,11 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UProjectileMovementComponent* compProjectile;
 
+	//누적시간
+	float currTime = 0;
+	//파괴시간
+	float destoryTime = 2;
+
+public:
+	void Die();
 };

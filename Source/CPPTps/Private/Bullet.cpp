@@ -45,6 +45,9 @@ ABullet::ABullet()
 	compProjectile->bShouldBounce = true;
 	//얼마나 잘 튕기게 할것인지 (0 ~ 1)
 	compProjectile->Bounciness = 0.5f;
+
+	//생명 시간을 2초로 한다.
+	//InitialLifeSpan = 2;
 }
 
 // Called when the game starts or when spawned
@@ -52,6 +55,9 @@ void ABullet::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	//Timer 설정하자
+	FTimerHandle deathTimer;
+	GetWorld()->GetTimerManager().SetTimer(deathTimer, this, &ABullet::Die, destoryTime, false);
 }
 
 // Called every frame
@@ -64,5 +70,19 @@ void ABullet::Tick(float DeltaTime)
 	FVector p0 = GetActorLocation();
 	FVector vt = GetActorForwardVector() * 2000 * DeltaTime;
 	//SetActorLocation(p0 + vt);
+
+	////시간을 누적해준다
+	//currTime += DeltaTime;
+	////2초가 지나면 
+	//if (currTime > destoryTime)
+	//{
+	//	//나를 파괴하자
+	//	Destroy();
+	//}
+}
+
+void ABullet::Die()
+{
+	Destroy();
 }
 
