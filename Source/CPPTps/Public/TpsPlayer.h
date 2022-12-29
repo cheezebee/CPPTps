@@ -49,6 +49,15 @@ public:
 	UPROPERTY()
 	class UUserWidget* sniperUI;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UUserWidget> commUIFactory;
+
+	UPROPERTY()
+	class UUserWidget* commonUI;
+
+	UPROPERTY(EditAnywhere)
+	class UParticleSystem* exploEffect;
+
 	//W, A, S, D 키에 따른 값 셋팅
 	float h = 0;
 	float v = 0;

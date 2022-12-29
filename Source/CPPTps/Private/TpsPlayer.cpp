@@ -7,6 +7,9 @@
 #include <GameFramework/CharacterMovementComponent.h>
 #include "Bullet.h"
 #include <Blueprint/UserWidget.h>
+#include <Kismet/GameplayStatics.h>
+#include <Particles/ParticleSystem.h>
+
 
 // Sets default values
 ATpsPlayer::ATpsPlayer()
@@ -75,6 +78,20 @@ ATpsPlayer::ATpsPlayer()
 		sniperUIFactory = tempSniperUI.Class;
 	}
 
+	//CommonUI 클래스 가져오자
+	ConstructorHelpers::FClassFinder<UUserWidget> tempCommonUI(TEXT("WidgetBlueprint'/Game/Blueprints/CommonUI.CommonUI_C'"));
+	if (tempCommonUI.Succeeded())
+	{
+		commUIFactory = tempCommonUI.Class;
+	}
+
+	//폭발 파티클 가져오자
+	ConstructorHelpers::FObjectFinder<UParticleSystem> tempExplo(TEXT("ParticleSystem'/Game/StarterContent/Particles/P_Explosion.P_Explosion'"));
+	if (tempExplo.Succeeded())
+	{
+		exploEffect = tempExplo.Object;
+	}
+
 
 	//Controller 의 회전값을 따라 갈 속성 셋팅
 	bUseControllerRotationYaw = true;
@@ -103,6 +120,10 @@ void ATpsPlayer::BeginPlay()
 
 	//SniperUI 만들자
 	sniperUI = CreateWidget(GetWorld(), sniperUIFactory);
+
+	//CommonUI 만들고 보이게 하자
+	commonUI = CreateWidget(GetWorld(), commUIFactory);
+	commonUI->AddToViewport();
 
 	//bUseControllerRotationYaw = false;
 	//compArm->bUsePawnControlRotation = false;
@@ -172,6 +193,8 @@ void ATpsPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	PlayerInputComponent->BindAction(TEXT("Zoom"), IE_Released, this, &ATpsPlayer::InputZoomOut);
 }
 
+
+
 void ATpsPlayer::InputHorizontal(float value)
 {
 	h = value;	
@@ -215,11 +238,51 @@ void ATpsPlayer::InputJump()
 
 void ATpsPlayer::InputFire()
 {
-	//FirePos Transform 을 가져오자
-	FTransform trFire = compRifle->GetSocketTransform(TEXT("FirePos"));
+	//만약에 Rifle 이 보이는 상태라면
+	if (compRifle->IsVisible() == true)
+	{
+		//FirePos Transform 을 가져오자
+		FTransform trFire = compRifle->GetSocketTransform(TEXT("FirePos"));
 
-	//총알생성 (위치, 회전 셋팅)
-	GetWorld()->SpawnActor<ABullet>(bulletFactory, trFire);
+		//총알생성 (위치, 회전 셋팅)
+		GetWorld()->SpawnActor<ABullet>(bulletFactory, trFire);
+	}
+	//Rifle 이 보이지 않는 상태라면 (Sniper 가 보이는 상태)
+	else
+	{
+		//Start, 
+		FVector startPos = compCam->GetComponentLocation();
+		//End (카메라위치 + 카메라 앞방향 * 거리)
+		FVector endPos = startPos + compCam->GetForwardVector() * 5000;
+		//충돌이 되었을 때 정보를 담을 변수
+		FHitResult hitInfo;
+		//충돌 옵션 설정
+		FCollisionQueryParams param;
+		param.AddIgnoredActor(this);
+
+		//1. Line 을 발사한다.(LineTrace 사용)
+		bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, startPos, endPos, ECC_Visibility, param);
+		//2. 만약에 누군가 Line 에 맞았다면
+		if (bHit == true)
+		{
+			//3. 맞은 위치에 폭발 효과를 보여준다.
+			UGameplayStatics::SpawnEmitterAtLocation(
+				GetWorld(),
+				exploEffect,
+				hitInfo.ImpactPoint);
+
+			//4. 만약에 맞은애가 isSimulatingPhysics 가 활성화 되어 있다면
+			UPrimitiveComponent* compHit = hitInfo.GetComponent();
+			if (compHit->IsSimulatingPhysics() == true)
+			{
+				//5. 맞은지점에 힘을 가한다. 
+				//F = m * a;
+				FVector force = compHit->GetMass() * compCam->GetForwardVector() * 30000;
+				compHit->AddForceAtLocation(force, hitInfo.ImpactPoint);
+			}
+		}
+	}
+	
 }
 
 void ATpsPlayer::InputRifle()
@@ -234,6 +297,13 @@ void ATpsPlayer::InputSniper()
 
 void ATpsPlayer::ChangeWeapon(bool useSniper)
 {
+	//만약에 useSniper 가 false (Rifle 로 무기 변경)
+	if (useSniper == false && sniperUI->IsInViewport() == true)
+	{
+		//Common UI를 보이게 한다
+		InputZoomOut();
+	}
+
 	compRifle->SetVisibility(!useSniper);
 	compSniper->SetVisibility(useSniper);
 
@@ -255,18 +325,30 @@ void ATpsPlayer::ChangeWeapon(bool useSniper)
 
 void ATpsPlayer::InputZoomIn()
 {
+	//0 만약에 스나이퍼가 보이지 않는 상태라면 함수를 나가겠다.
+	if (compSniper->IsVisible() == false) return;
+
 	//1 만들어 놓은 UI ViewPort에 붙이고
 	sniperUI->AddToViewport();
 
 	//2 카메라의 Field of View 를 45로
 	compCam->SetFieldOfView(45);
+
+	//3 Common UI 를 떼버리자
+	commonUI->RemoveFromParent();
 }
 
 void ATpsPlayer::InputZoomOut()
 {
+	//0 만약에 스나이퍼가 보이지 않는 상태라면 함수를 나가겠다.
+	if (compSniper->IsVisible() == false) return;
+
 	//1. SniperUI 를 떼버리자
 	sniperUI->RemoveFromParent();
 	//2. 카메라의 Field of View 를 90로
 	compCam->SetFieldOfView(90);
+
+	//3. Common UI 를 ViewPort 에 붙이자
+	commonUI->AddToViewport();	
 }
 
