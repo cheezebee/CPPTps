@@ -52,6 +52,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UUserWidget> commUIFactory;
 
+
 	UPROPERTY()
 	class UUserWidget* commonUI;
 

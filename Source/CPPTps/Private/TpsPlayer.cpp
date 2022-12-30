@@ -227,7 +227,7 @@ void ATpsPlayer::InputLookUp(float value)
 
 void ATpsPlayer::InputTurn(float value)
 {
-	AddControllerYawInput(value);
+	
 	//mx += value;
 }
 
@@ -350,5 +350,6 @@ void ATpsPlayer::InputZoomOut()
 
 	//3. Common UI 를 ViewPort 에 붙이자
 	commonUI->AddToViewport();	
+
 }
 
