@@ -17,4 +17,5 @@ void UABP_TspPlayer::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		speed = me->GetVelocity().Length();
 	}
+	
 }
