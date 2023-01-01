@@ -3,6 +3,8 @@
 
 #include "Enemy.h"
 #include "EnemyFSM.h"
+#include <GameFramework/CharacterMovementComponent.h>
+#include <Components/CapsuleComponent.h>
 
 // Sets default values
 AEnemy::AEnemy()
@@ -14,6 +16,9 @@ AEnemy::AEnemy()
 	GetMesh()->SetRelativeLocation(FVector(0, 0, -90));
 	//Mesh 의 회전을 셋팅
 	GetMesh()->SetRelativeRotation(FRotator(0, -90, 0));
+
+	
+
 	//Mesh 외형 셋팅
 	ConstructorHelpers::FObjectFinder<USkeletalMesh> tempMesh(TEXT("SkeletalMesh'/Game/Enemy/Model/vampire_a_lusth.vampire_a_lusth'"));
 	if (tempMesh.Succeeded())
@@ -23,6 +28,11 @@ AEnemy::AEnemy()
 
 	//FSM 컴포넌트 추가
 	fsm = CreateDefaultSubobject<UEnemyFSM>(TEXT("FSM"));
+
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->MaxWalkSpeed = 400;
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);	
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	
 }
 

@@ -46,6 +46,21 @@ public:
 	//대기 상태 기다리는 시간
 	float idleDelayTime = 2;
 
+	float attackRange = 200;
+	float attackDelayTime = 2;
+	
+
+	float maxHP = 3;
+	float currHP = 0;
+	float damagedDelayTime = 2;
+	float dieSpeed = 50;
+
+	UPROPERTY(EditAnywhere)
+	class ATpsPlayer* target;
+
+	UPROPERTY(EditAnywhere)
+	class AEnemy* me;
+
 
 public:
 	//대기
@@ -58,4 +73,10 @@ public:
 	void UpdateDamaged();
 	//죽음
 	void UpdateDie();
+
+	void ChangeState(EEnemyState state);
+
+	bool IsWaitComplete(float delayTime);
+
+	void OnDamaged();
 };

@@ -2,6 +2,10 @@
 
 
 #include "EnemyFSM.h"
+#include "TpsPlayer.h"
+#include <Kismet/GameplayStatics.h>
+#include "Enemy.h"
+#include <Components/CapsuleComponent.h>
 
 // Sets default values for this component's properties
 UEnemyFSM::UEnemyFSM()
@@ -18,9 +22,12 @@ UEnemyFSM::UEnemyFSM()
 void UEnemyFSM::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
 	
+	target = Cast<ATpsPlayer>(UGameplayStatics::GetActorOfClass(GetWorld(), ATpsPlayer::StaticClass()));
+
+	me = Cast<AEnemy>(GetOwner());
+
+	currHP = maxHP;
 }
 
 
@@ -50,43 +57,123 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 	//현재 상태 계속 출력해보자
 
-	UE_LOG(LogTemp, Warning, TEXT("%d"), currState);
+	//UE_LOG(LogTemp, Warning, TEXT("%d"), currState);
 
-	/*UEnum* enumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EEnemyState"), true);
-	if (enumPtr != nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *enumPtr->GetNameStringByIndex((int32)currState));
-	}*/
+	
 }
 
 void UEnemyFSM::UpdateIdle()
 {
-	//시간을 흐르게 한다.
-	currTime += GetWorld()->GetDeltaSeconds();
-	//2초가 지나면
-	if (currTime > idleDelayTime)
+	if (IsWaitComplete(idleDelayTime))
 	{
-		//현재상태를 Move로 한다.
-		currState = EEnemyState::Move;
+		ChangeState(EEnemyState::Move);
 	}
 }
 
 void UEnemyFSM::UpdateMove()
 {
+	FVector dir = target->GetActorLocation() - me->GetActorLocation();
 
+	if (dir.Length() > attackRange)
+	{
+		me->AddMovementInput(dir.GetSafeNormal());
+	}
+	else
+	{
+		ChangeState(EEnemyState::Attack);
+	}
+	
 }
 
 void UEnemyFSM::UpdateAttack()
 {
-
+	if (IsWaitComplete(attackDelayTime))
+	{
+		//거리
+		float dist = FVector::Distance(target->GetActorLocation(), me->GetActorLocation());
+		if (dist < attackRange)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Attack!"));
+		}
+		else
+		{
+			ChangeState(EEnemyState::Idle);
+		}
+	}	
 }
 
 void UEnemyFSM::UpdateDamaged()
 {
-
+	if (IsWaitComplete(damagedDelayTime))
+	{
+		ChangeState(EEnemyState::Idle);
+	}
 }
 
 void UEnemyFSM::UpdateDie()
 {
+	FVector p0 = me->GetActorLocation();
+	FVector vt = FVector::DownVector * dieSpeed * GetWorld()->GetDeltaSeconds();
+	FVector p = p0 + vt;
 
+	if (p.Z < -200)
+	{
+		me->Destroy();
+	}
+	else
+	{
+		me->SetActorLocation(p);
+	}
+}
+
+void UEnemyFSM::ChangeState(EEnemyState state)
+{
+	UEnum* enumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EEnemyState"), true);
+	if (enumPtr != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s -> %s"), *enumPtr->GetNameStringByIndex((int32)currState), *enumPtr->GetNameStringByIndex((int32)state));
+	}
+
+	currState = state;
+	currTime = 0;
+	
+	switch (state)
+	{
+	case EEnemyState::Idle:
+		break;
+	case EEnemyState::Move:
+		break;
+	case EEnemyState::Attack:
+		currTime = attackDelayTime;
+		break;
+	case EEnemyState::Damaged:
+		break;
+	case EEnemyState::Die:
+		me->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		break;
+	}
+}
+
+bool UEnemyFSM::IsWaitComplete(float delayTime)
+{
+	currTime += GetWorld()->GetDeltaSeconds();
+	if (currTime > delayTime)
+	{
+		currTime = 0;
+		return true;
+	}
+	return false;
+}
+
+void UEnemyFSM::OnDamaged()
+{
+	currHP--;
+	if (currHP > 0)
+	{
+		ChangeState(EEnemyState::Damaged);
+	}
+	else
+	{
+		ChangeState(EEnemyState::Die);
+	}
 }

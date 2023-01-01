@@ -9,6 +9,9 @@
 #include <Blueprint/UserWidget.h>
 #include <Kismet/GameplayStatics.h>
 #include <Particles/ParticleSystem.h>
+#include "Enemy.h"
+#include "EnemyFSM.h"
+#include "ABP_TspPlayer.h"
 
 
 // Sets default values
@@ -90,6 +93,12 @@ ATpsPlayer::ATpsPlayer()
 	if (tempExplo.Succeeded())
 	{
 		exploEffect = tempExplo.Object;
+	}
+
+	ConstructorHelpers::FClassFinder<UABP_TspPlayer> tempAnim(TEXT("AnimBlueprint'/Game/Blueprints/ABP_TpsPlayerAnim.ABP_TpsPlayerAnim_C'"));
+	if (tempAnim.Succeeded())
+	{
+		GetMesh()->SetAnimInstanceClass(tempAnim.Class);
 	}
 
 
@@ -227,7 +236,7 @@ void ATpsPlayer::InputLookUp(float value)
 
 void ATpsPlayer::InputTurn(float value)
 {
-	
+	AddControllerYawInput(value);
 	//mx += value;
 }
 
@@ -279,6 +288,12 @@ void ATpsPlayer::InputFire()
 				//F = m * a;
 				FVector force = compHit->GetMass() * compCam->GetForwardVector() * 30000;
 				compHit->AddForceAtLocation(force, hitInfo.ImpactPoint);
+			}
+			
+			AEnemy* enemy = Cast<AEnemy>(hitInfo.GetActor());
+			if (enemy != nullptr)
+			{
+				enemy->fsm->OnDamaged();
 			}
 		}
 	}
