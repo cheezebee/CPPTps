@@ -2,6 +2,9 @@
 
 
 #include "EnemyFSM.h"
+#include <Kismet/GameplayStatics.h>
+#include "TpsPlayer.h"
+#include "Enemy.h"
 
 // Sets default values for this component's properties
 UEnemyFSM::UEnemyFSM()
@@ -19,8 +22,10 @@ void UEnemyFSM::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
-	
+	//타겟 찾자
+	target = Cast<ATpsPlayer>(UGameplayStatics::GetActorOfClass(GetWorld(), ATpsPlayer::StaticClass()));
+	//나를 찾자
+	me = Cast<AEnemy>(GetOwner());	
 }
 
 
@@ -46,17 +51,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	case EEnemyState::Die:
 		UpdateDie();
 		break;
-	}	
-
-	//현재 상태 계속 출력해보자
-
-	UE_LOG(LogTemp, Warning, TEXT("%d"), currState);
-
-	/*UEnum* enumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EEnemyState"), true);
-	if (enumPtr != nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *enumPtr->GetNameStringByIndex((int32)currState));
-	}*/
+	}
 }
 
 void UEnemyFSM::UpdateIdle()
@@ -66,14 +61,28 @@ void UEnemyFSM::UpdateIdle()
 	//2초가 지나면
 	if (currTime > idleDelayTime)
 	{
-		//현재상태를 Move로 한다.
-		currState = EEnemyState::Move;
+		//현재상태를 Move 로 한다.
+		ChangeState(EEnemyState::Move);
 	}
 }
 
 void UEnemyFSM::UpdateMove()
 {
-
+	//1. 타겟을 향하는 방향을 구하고(target - me)
+	FVector dir = target->GetActorLocation() - me->GetActorLocation();
+	
+	//만약에 target - me 거리가 공격범위보다 작으면
+	if (dir.Length() < attackRange)
+	{
+		//상태를 Attack 으로 변경
+		ChangeState(EEnemyState::Attack);
+	}
+	//그렇지 않으면
+	else
+	{
+		//2. 그 방향으로 이동하고 싶다.
+		me->AddMovementInput(dir.GetSafeNormal());
+	}
 }
 
 void UEnemyFSM::UpdateAttack()
@@ -88,5 +97,23 @@ void UEnemyFSM::UpdateDamaged()
 
 void UEnemyFSM::UpdateDie()
 {
+
+}
+
+void UEnemyFSM::ChangeState(EEnemyState state)
+{
+	//상태 변경 로그를 출력하자
+	UEnum* enumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EEnemyState"), true);
+	if (enumPtr != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s -----> %s"),
+			*enumPtr->GetNameStringByIndex((int32)currState),
+			*enumPtr->GetNameStringByIndex((int32)state));
+	}
+
+	//현재 상태를 갱신
+	currState = state;
+
+	//상태에 따른 초기설정
 
 }

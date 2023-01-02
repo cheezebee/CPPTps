@@ -3,6 +3,7 @@
 
 #include "Enemy.h"
 #include "EnemyFSM.h"
+#include <GameFramework/CharacterMovementComponent.h>
 
 // Sets default values
 AEnemy::AEnemy()
@@ -31,6 +32,9 @@ void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	//움직이는 방향으로 몸을 자동으로 회전하라는 옵션
+	
+	GetCharacterMovement()->bOrientRotationToMovement = true;
 }
 
 // Called every frame

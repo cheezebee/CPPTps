@@ -227,7 +227,7 @@ void ATpsPlayer::InputLookUp(float value)
 
 void ATpsPlayer::InputTurn(float value)
 {
-	
+	AddControllerYawInput(value);
 	//mx += value;
 }
 

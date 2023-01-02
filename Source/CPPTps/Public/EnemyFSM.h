@@ -41,10 +41,20 @@ public:
 	UPROPERTY(EditAnywhere)
 	EEnemyState currState = EEnemyState::Idle;
 
+	//타겟
+	UPROPERTY(EditAnywhere)
+	class ATpsPlayer* target;
+	//나
+	UPROPERTY(EditAnywhere)
+	class AEnemy* me;
+
 	//현재시간
 	float currTime = 0;
 	//대기 상태 기다리는 시간
 	float idleDelayTime = 2;
+
+	//공격범위
+	float attackRange = 200;
 
 
 public:
@@ -58,4 +68,7 @@ public:
 	void UpdateDamaged();
 	//죽음
 	void UpdateDie();
+
+	//상태 변경시 한번만!!! 호출 되는 함수
+	void ChangeState(EEnemyState state);
 };
