@@ -109,7 +109,7 @@ ATpsPlayer::ATpsPlayer()
 	//점프 횟수를 2개로 하자
 	JumpMaxCount = 2;
 	//움직이는 속력을 700으로 하자	
-	GetCharacterMovement()->MaxWalkSpeed = 700;
+	GetCharacterMovement()->MaxWalkSpeed = walkSpeed;
 	//점프하는 속력을 600으로 하자
 	GetCharacterMovement()->JumpZVelocity = 600;
 }
@@ -200,6 +200,10 @@ void ATpsPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	//Ctrl 키
 	PlayerInputComponent->BindAction(TEXT("Zoom"), IE_Pressed, this, &ATpsPlayer::InputZoomIn);
 	PlayerInputComponent->BindAction(TEXT("Zoom"), IE_Released, this, &ATpsPlayer::InputZoomOut);
+
+	//Left Shift 키
+	PlayerInputComponent->BindAction(TEXT("Run"), IE_Pressed, this, &ATpsPlayer::InputRun);
+	PlayerInputComponent->BindAction(TEXT("Run"), IE_Released, this, &ATpsPlayer::InputRun);
 }
 
 
@@ -238,6 +242,19 @@ void ATpsPlayer::InputTurn(float value)
 {
 	AddControllerYawInput(value);
 	//mx += value;
+}
+
+void ATpsPlayer::InputRun()
+{
+	UCharacterMovementComponent* compMove = GetCharacterMovement();
+	if (compMove->MaxWalkSpeed > walkSpeed)
+	{
+		compMove->MaxWalkSpeed = walkSpeed;
+	}
+	else
+	{
+		compMove->MaxWalkSpeed = runSpeed;
+	}
 }
 
 void ATpsPlayer::InputJump()

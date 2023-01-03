@@ -22,6 +22,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float speed = 0;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float dirH = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bAir = false;
+
 	UPROPERTY()
 	class ATpsPlayer* me;
 };

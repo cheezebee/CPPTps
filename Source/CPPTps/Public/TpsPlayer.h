@@ -67,7 +67,8 @@ public:
 	float mx = 0;
 	float my = 0;
 
-	float walkSpeed = 600;
+	float walkSpeed = 300;
+	float runSpeed = 600;
 
 public:
 
@@ -78,6 +79,7 @@ public:
 	void InputVertical(float value);
 	void InputLookUp(float value);
 	void InputTurn(float value);
+	void InputRun();
 	void InputJump();
 	void InputFire();
 	void InputRifle();
