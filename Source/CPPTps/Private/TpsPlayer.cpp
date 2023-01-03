@@ -9,6 +9,8 @@
 #include <Blueprint/UserWidget.h>
 #include <Kismet/GameplayStatics.h>
 #include <Particles/ParticleSystem.h>
+#include "Enemy.h"
+#include "EnemyFSM.h"
 
 
 // Sets default values
@@ -279,6 +281,15 @@ void ATpsPlayer::InputFire()
 				//F = m * a;
 				FVector force = compHit->GetMass() * compCam->GetForwardVector() * 30000;
 				compHit->AddForceAtLocation(force, hitInfo.ImpactPoint);
+			}
+
+			//만약에 맞은놈이 Enemy 라면
+			AActor* actor = hitInfo.GetActor();
+			AEnemy* enemy = Cast<AEnemy>(actor);
+			if (enemy != nullptr)
+			{
+				//Enemy - fsm - ReceiveDamage 함수 호출				
+				enemy->fsm->ReceiveDamage();
 			}
 		}
 	}

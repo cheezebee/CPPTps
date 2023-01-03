@@ -4,6 +4,7 @@
 #include "Enemy.h"
 #include "EnemyFSM.h"
 #include <GameFramework/CharacterMovementComponent.h>
+#include <Components/CapsuleComponent.h>
 
 // Sets default values
 AEnemy::AEnemy()
@@ -25,6 +26,9 @@ AEnemy::AEnemy()
 	//FSM 컴포넌트 추가
 	fsm = CreateDefaultSubobject<UEnemyFSM>(TEXT("FSM"));
 	
+	//LineTrace 에 김자가 되게 셋팅	
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 // Called when the game starts or when spawned

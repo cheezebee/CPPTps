@@ -55,7 +55,19 @@ public:
 
 	//공격범위
 	float attackRange = 200;
+	//공격 대기 시간
+	float attackDelayTime = 2;
 
+	//피격 대기 시간
+	float damageDelayTime = 2;
+
+	//현재 체력
+	float currHP;
+	//최대 체력
+	float maxHP = 3;
+
+	//죽었을 때 내려가는 속력
+	float dieSpeed = 100;
 
 public:
 	//대기
@@ -71,4 +83,10 @@ public:
 
 	//상태 변경시 한번만!!! 호출 되는 함수
 	void ChangeState(EEnemyState state);
+
+	//공격 받았을 때 처리하는 함수
+	void ReceiveDamage();
+
+	//Delay 함수
+	bool IsWaitComplete(float delayTime);
 };
