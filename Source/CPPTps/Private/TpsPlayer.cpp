@@ -11,6 +11,7 @@
 #include <Particles/ParticleSystem.h>
 #include "Enemy.h"
 #include "EnemyFSM.h"
+#include <Components/CapsuleComponent.h>
 
 
 // Sets default values
@@ -126,6 +127,9 @@ void ATpsPlayer::BeginPlay()
 	//CommonUI 만들고 보이게 하자
 	commonUI = CreateWidget(GetWorld(), commUIFactory);
 	commonUI->AddToViewport();
+
+	//CapsuleCompoenent 의 ECC_Visibility -> ECR_Block 로 셋팅
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
 	//bUseControllerRotationYaw = false;
 	//compArm->bUsePawnControlRotation = false;
@@ -292,8 +296,7 @@ void ATpsPlayer::InputFire()
 				enemy->fsm->ReceiveDamage();
 			}
 		}
-	}
-	
+	}	
 }
 
 void ATpsPlayer::InputRifle()

@@ -14,7 +14,8 @@ enum class EEnemyState : uint8
 	Move,
 	Attack,
 	Damaged,
-	Die
+	Die,
+	ReturnPos
 };
 
 
@@ -53,6 +54,10 @@ public:
 	//대기 상태 기다리는 시간
 	float idleDelayTime = 2;
 
+	//쫓아 갈 수 있는 범위
+	float traceRange = 1000;
+
+
 	//공격범위
 	float attackRange = 200;
 	//공격 대기 시간
@@ -69,6 +74,11 @@ public:
 	//죽었을 때 내려가는 속력
 	float dieSpeed = 100;
 
+	//이동할 수 있는 반경
+	float moveRange = 2000;
+	//처음 위치를 담아놓을 변수
+	FVector originPos;
+
 public:
 	//대기
 	void UpdateIdle();
@@ -80,6 +90,8 @@ public:
 	void UpdateDamaged();
 	//죽음
 	void UpdateDie();
+	//리턴
+	void UpdateReturnPos();
 
 	//상태 변경시 한번만!!! 호출 되는 함수
 	void ChangeState(EEnemyState state);
@@ -89,4 +101,7 @@ public:
 
 	//Delay 함수
 	bool IsWaitComplete(float delayTime);
+
+	//타겟을 쫓아 갈 수 있니?
+	bool IsTargetTrace();
 };

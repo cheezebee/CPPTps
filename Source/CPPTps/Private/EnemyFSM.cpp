@@ -6,6 +6,7 @@
 #include "TpsPlayer.h"
 #include "Enemy.h"
 #include <Components/CapsuleComponent.h>
+#include <Kismet/KismetMathLibrary.h>
 
 // Sets default values for this component's properties
 UEnemyFSM::UEnemyFSM()
@@ -30,6 +31,9 @@ void UEnemyFSM::BeginPlay()
 
 	//나의 초기 체력을 셋팅하자
 	currHP = maxHP;
+
+	//나의 초기 위치를 저장하자
+	originPos = me->GetActorLocation();
 }
 
 
@@ -55,15 +59,25 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	case EEnemyState::Die:
 		UpdateDie();
 		break;
+	case EEnemyState::ReturnPos:
+		UpdateReturnPos();
+		break;
 	}
 }
 
 void UEnemyFSM::UpdateIdle()
 {
-	//idleDelayTime 이 지나면	
-	if (IsWaitComplete(idleDelayTime))
+	////idleDelayTime 이 지나면	
+	//if (IsWaitComplete(idleDelayTime))
+	//{
+	//	//현재상태를 Move 로 한다.
+	//	ChangeState(EEnemyState::Move);
+	//}
+	
+	//만약에 플레이어를 쫓아 갈 수 있니?
+	if (IsTargetTrace())
 	{
-		//현재상태를 Move 로 한다.
+		//상태를 Move 로 전환
 		ChangeState(EEnemyState::Move);
 	}
 }
@@ -72,13 +86,22 @@ void UEnemyFSM::UpdateMove()
 {
 	//1. 타겟을 향하는 방향을 구하고(target - me)
 	FVector dir = target->GetActorLocation() - me->GetActorLocation();
+
+	//처음 위치, 나의 현재 위치의 거리
+	float dist = FVector::Distance(originPos, me->GetActorLocation());
 	
+	//만약에 dist 가 moveRange 보다 커지면 (움직일 수 있는 반경을 넘어갔다면)
+	if (dist > moveRange)
+	{
+		//상태를 ReturnPos 로 변경
+		ChangeState(EEnemyState::ReturnPos);
+	}
 	//만약에 target - me 거리가 공격범위보다 작으면
-	if (dir.Length() < attackRange)
+	else if (dir.Length() < attackRange)
 	{
 		//상태를 Attack 으로 변경
 		ChangeState(EEnemyState::Attack);
-	}
+	}	
 	//그렇지 않으면
 	else
 	{
@@ -115,7 +138,7 @@ void UEnemyFSM::UpdateDamaged()
 	if (IsWaitComplete(damageDelayTime))
 	{
 		//Move 상태
-		ChangeState(EEnemyState::Move);
+		ChangeState(EEnemyState::Idle);
 	}
 }
 
@@ -137,7 +160,25 @@ void UEnemyFSM::UpdateDie()
 	{
 		me->SetActorLocation(p);
 	}
+}
 
+void UEnemyFSM::UpdateReturnPos()
+{
+	//1. 나 ----> 처음위치를 향하는 방향을 구한다.
+	FVector dir = originPos - me->GetActorLocation();
+
+	//2. 만약에 나 --- 처음위치의 거리가 10보다 작으면
+	if (dir.Length() < 10)
+	{
+		//3. Idle 상태로 전환
+		ChangeState(EEnemyState::Idle);
+	}
+	//4. 그렇지 않으면 
+	else
+	{
+		//5. 계속 1번에서 구한 방향으로 이동한다
+		me->AddMovementInput(dir.GetSafeNormal());
+	}
 }
 
 void UEnemyFSM::ChangeState(EEnemyState state)
@@ -199,4 +240,49 @@ bool UEnemyFSM::IsWaitComplete(float delayTime)
 
 	//5. 그렇지 않으면 false 를 반환
 	return false;
+}
+
+
+bool UEnemyFSM::IsTargetTrace()
+{
+	//1. 나 ----> 플레이어를 향하는 벡터
+	FVector dir = target->GetActorLocation() - me->GetActorLocation();
+
+	//2. 나의 앞방향과 1번에 구한 벡터의 내적
+	float dotValue = FVector::DotProduct(me->GetActorForwardVector(), dir.GetSafeNormal());
+
+	//3. 2번에 구한 값을 Acos --> 두 벡터의 사이각
+	float angle = UKismetMathLibrary::DegAcos(dotValue);
+	
+	//4. 만약에 3번에서 구한 값이 30보다 작고(시야각 60)
+	//   나 - 타겟 과의 거리가 traceRange 보다 작으면
+	if (angle < 30 && dir.Length() < traceRange)
+	{
+		//Enemy -----> target LineTrace 쏘자!!
+		FHitResult hitInfo;
+		FCollisionQueryParams param;
+		param.AddIgnoredActor(me);
+
+		bool bHit = GetWorld()->LineTraceSingleByChannel(
+			hitInfo,
+			me->GetActorLocation(),
+			target->GetActorLocation(),
+			ECollisionChannel::ECC_Visibility,
+			param);
+
+		//만약에 부딪힌 곳이 있다면
+		if (bHit)
+		{
+			//만약에 부딪힌 놈의 이름이 Player 를 포함하고 있다면
+			if (hitInfo.GetActor()->GetName().Contains(TEXT("Player")))
+			{
+				//5. true 반환
+				return true;
+			}	
+		}
+	}
+
+	//6. 그렇지 않으면 false 반환	
+	return false;
+
 }
