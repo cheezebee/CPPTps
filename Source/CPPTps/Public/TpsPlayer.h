@@ -52,7 +52,6 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UUserWidget> commUIFactory;
 
-
 	UPROPERTY()
 	class UUserWidget* commonUI;
 
@@ -88,4 +87,8 @@ public:
 
 	void InputZoomIn();
 	void InputZoomOut();
+
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AEnemy> enemyFactory;
 };

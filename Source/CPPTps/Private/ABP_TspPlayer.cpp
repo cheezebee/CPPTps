@@ -5,6 +5,15 @@
 #include "TpsPlayer.h"
 #include <GameFramework/CharacterMovementComponent.h>
 
+UABP_TspPlayer::UABP_TspPlayer()
+{
+	ConstructorHelpers::FObjectFinder<UAnimMontage> tempMontage(TEXT("AnimMontage'/Game/Blueprints/AM_Attack.AM_Attack'"));
+	if (tempMontage.Succeeded())
+	{
+		attackAnimMontage = tempMontage.Object;
+	}
+}
+
 void UABP_TspPlayer::NativeBeginPlay()
 {
 	Super::NativeBeginPlay();
@@ -23,4 +32,9 @@ void UABP_TspPlayer::NativeUpdateAnimation(float DeltaSeconds)
 
 		bAir = me->GetCharacterMovement()->IsFalling();
 	}
+}
+
+void UABP_TspPlayer::PlayAttackAnim()
+{
+	Montage_Play(attackAnimMontage);
 }

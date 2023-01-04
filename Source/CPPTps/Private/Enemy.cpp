@@ -34,6 +34,7 @@ AEnemy::AEnemy()
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);	
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
 // Called when the game starts or when spawned

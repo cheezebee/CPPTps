@@ -54,12 +54,6 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		UpdateDie();
 		break;
 	}	
-
-	//현재 상태 계속 출력해보자
-
-	//UE_LOG(LogTemp, Warning, TEXT("%d"), currState);
-
-	
 }
 
 void UEnemyFSM::UpdateIdle()

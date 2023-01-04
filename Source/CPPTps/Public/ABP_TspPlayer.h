@@ -13,6 +13,9 @@ UCLASS()
 class CPPTPS_API UABP_TspPlayer : public UAnimInstance
 {
 	GENERATED_BODY()
+
+public:
+	UABP_TspPlayer();
 	
 public:
 	virtual void NativeBeginPlay() override;
@@ -30,4 +33,10 @@ public:
 
 	UPROPERTY()
 	class ATpsPlayer* me;
+
+	UPROPERTY(EditAnywhere)
+	class UAnimMontage* attackAnimMontage;
+
+public:
+	void PlayAttackAnim();
 };

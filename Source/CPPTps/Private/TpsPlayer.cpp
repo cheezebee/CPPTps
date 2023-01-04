@@ -43,8 +43,9 @@ ATpsPlayer::ATpsPlayer()
 
 	//SkeltalMeshComponent 셋팅 (Rifle)
 	compRifle = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RIFLE"));
-	compRifle->SetupAttachment(GetMesh());
-	compRifle->SetRelativeLocation(FVector(-14, 52, 120));
+	compRifle->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
+	compRifle->SetRelativeLocation(FVector(-17, 10, -3));
+	compRifle->SetRelativeRotation(FRotator(0, 90, 0));
 
 	//SkeltalMesh 불러와서 셋팅
 	ConstructorHelpers::FObjectFinder<USkeletalMesh> tempRifle(TEXT("SkeletalMesh'/Game/FPWeapon/Mesh/SK_FPGun.SK_FPGun'"));
@@ -55,8 +56,9 @@ ATpsPlayer::ATpsPlayer()
 
 	//StaticMeshComponent 셋팅(Sniper)
 	compSniper = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SNIPER"));
-	compSniper->SetupAttachment(GetMesh());
-	compSniper->SetRelativeLocation(FVector(-14, 52, 120));
+	compSniper->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
+	compSniper->SetRelativeLocation(FVector(-42, 7, 1));
+	compSniper->SetRelativeRotation(FRotator(0, 90, 0));
 	compSniper->SetRelativeScale3D(FVector(0.15f));
 
 	//StaticMesh 블러와서 셋팅
@@ -259,11 +261,18 @@ void ATpsPlayer::InputRun()
 
 void ATpsPlayer::InputJump()
 {
-	Jump();
+
+	//Jump();
+	FActorSpawnParameters param;
+	param.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	GetWorld()->SpawnActor<AEnemy>(enemyFactory, FVector(0,0,0), FRotator::ZeroRotator, param);
 }
 
 void ATpsPlayer::InputFire()
 {
+	UABP_TspPlayer* anim = Cast<UABP_TspPlayer>(GetMesh()->GetAnimInstance());
+	anim->PlayAttackAnim();
+
 	//만약에 Rifle 이 보이는 상태라면
 	if (compRifle->IsVisible() == true)
 	{
@@ -382,6 +391,7 @@ void ATpsPlayer::InputZoomOut()
 
 	//3. Common UI 를 ViewPort 에 붙이자
 	commonUI->AddToViewport();	
-
 }
+
+
 
