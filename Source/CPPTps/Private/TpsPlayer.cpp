@@ -12,6 +12,7 @@
 #include "Enemy.h"
 #include "EnemyFSM.h"
 #include <Components/CapsuleComponent.h>
+#include "ABP_Player.h"
 
 
 // Sets default values
@@ -95,6 +96,13 @@ ATpsPlayer::ATpsPlayer()
 		exploEffect = tempExplo.Object;
 	}
 
+	//애니메이션 블루프린트 가져오자
+	ConstructorHelpers::FClassFinder<UABP_Player> tempAnim(TEXT("AnimBlueprint'/Game/Blueprints/ABP_Player.ABP_Player_C'"));
+	if (tempAnim.Succeeded())
+	{
+		GetMesh()->SetAnimInstanceClass(tempAnim.Class);
+	}
+
 
 	//Controller 의 회전값을 따라 갈 속성 셋팅
 	bUseControllerRotationYaw = true;
@@ -154,14 +162,14 @@ void ATpsPlayer::MoveAction(float deltaTime)
 	//(1, 0, 0) * v + (0, 1, 0) * h = (v, 0, 0) + (0, h, 0) = (v, h, 0);
 	FVector vt = dir.GetSafeNormal() * walkSpeed * deltaTime;
 	//SetActorLocation(p0 + vt);
-
+	
 	//Controller 를 이용한 이동
 	AddMovementInput(dir.GetSafeNormal());
 }
 
 void ATpsPlayer::RotateAction()
 {
-	//마우스 좌우에 따라서 Actor를 회전 시키자
+	//마우스 좌우에 따라서 Actor 를 회전 시키자
 	SetActorRotation(FRotator(0, mx, 0));
 	//마우스 상하에 따라서 SpringArm을 회전 시키자
 	compArm->SetRelativeRotation(FRotator(-my, 0, 0));
