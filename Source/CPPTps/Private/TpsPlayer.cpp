@@ -12,6 +12,7 @@
 #include "Enemy.h"
 #include "EnemyFSM.h"
 #include "ABP_TspPlayer.h"
+#include <Camera/CameraShakeBase.h>
 
 
 // Sets default values
@@ -103,6 +104,12 @@ ATpsPlayer::ATpsPlayer()
 		GetMesh()->SetAnimInstanceClass(tempAnim.Class);
 	}
 
+	ConstructorHelpers::FClassFinder<UCameraShakeBase> tempCamShake(TEXT("Blueprint'/Game/Blueprints/BP_CameraShake.BP_CameraShake_C'"));
+	if (tempCamShake.Succeeded())
+	{
+		cameraShake = tempCamShake.Class;
+	}
+
 
 	//Controller 의 회전값을 따라 갈 속성 셋팅
 	bUseControllerRotationYaw = true;
@@ -149,6 +156,22 @@ void ATpsPlayer::Tick(float DeltaTime)
 	MoveAction(DeltaTime);
 	//회전	
 	//RotateAction();
+
+	if (bCamShake)
+	{
+		currShakeTime += DeltaTime;
+		if (currShakeTime < 0.5f)
+		{
+			FVector2D randPos = FMath::RandPointInCircle(2);
+			compCam->SetRelativeLocation(FVector(0, randPos.X, randPos.Y));
+		}
+		else
+		{
+			bCamShake = false;
+			currShakeTime = 0;
+			compCam->SetRelativeLocation(FVector::ZeroVector);
+		}
+	}
 }
 
 void ATpsPlayer::MoveAction(float deltaTime)
@@ -262,16 +285,21 @@ void ATpsPlayer::InputRun()
 void ATpsPlayer::InputJump()
 {
 
-	//Jump();
-	FActorSpawnParameters param;
+	Jump();
+	/*FActorSpawnParameters param;
 	param.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	GetWorld()->SpawnActor<AEnemy>(enemyFactory, FVector(0,0,0), FRotator::ZeroRotator, param);
+	GetWorld()->SpawnActor<AEnemy>(enemyFactory, FVector(0,0,0), FRotator::ZeroRotator, param);*/
 }
 
 void ATpsPlayer::InputFire()
 {
 	UABP_TspPlayer* anim = Cast<UABP_TspPlayer>(GetMesh()->GetAnimInstance());
 	anim->PlayAttackAnim();
+	
+	APlayerController* controller = GetWorld()->GetFirstPlayerController();
+	controller->PlayerCameraManager->StopAllCameraShakes();
+	controller->PlayerCameraManager->StartCameraShake(cameraShake);
+	bCamShake = true;
 
 	//만약에 Rifle 이 보이는 상태라면
 	if (compRifle->IsVisible() == true)

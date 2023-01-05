@@ -52,6 +52,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UUserWidget> commUIFactory;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UCameraShakeBase> cameraShake;
+
 	UPROPERTY()
 	class UUserWidget* commonUI;
 
@@ -91,4 +94,7 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AEnemy> enemyFactory;
+
+	bool bCamShake = false;
+	float currShakeTime = 0;
 };
