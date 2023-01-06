@@ -44,8 +44,9 @@ ATpsPlayer::ATpsPlayer()
 
 	//SkeltalMeshComponent 셋팅 (Rifle)
 	compRifle = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RIFLE"));
-	compRifle->SetupAttachment(GetMesh());
-	compRifle->SetRelativeLocation(FVector(-14, 52, 120));
+	compRifle->SetupAttachment(GetMesh(), TEXT("WeaponPos"));
+	compRifle->SetRelativeLocation(FVector(-17, 10, -3));
+	compRifle->SetRelativeRotation(FRotator(0, 90, 0));
 
 	//SkeltalMesh 불러와서 셋팅
 	ConstructorHelpers::FObjectFinder<USkeletalMesh> tempRifle(TEXT("SkeletalMesh'/Game/FPWeapon/Mesh/SK_FPGun.SK_FPGun'"));
@@ -56,8 +57,10 @@ ATpsPlayer::ATpsPlayer()
 
 	//StaticMeshComponent 셋팅(Sniper)
 	compSniper = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SNIPER"));
-	compSniper->SetupAttachment(GetMesh());
-	compSniper->SetRelativeLocation(FVector(-14, 52, 120));
+	compSniper->SetupAttachment(GetMesh(), TEXT("WeaponPos"));
+	
+	compSniper->SetRelativeLocation(FVector(-42, 7, 1));
+	compSniper->SetRelativeRotation(FRotator(0, 90, 0));
 	compSniper->SetRelativeScale3D(FVector(0.15f));
 
 	//StaticMesh 블러와서 셋팅
@@ -103,6 +106,13 @@ ATpsPlayer::ATpsPlayer()
 		GetMesh()->SetAnimInstanceClass(tempAnim.Class);
 	}
 
+	//Camera Shake 블루프린트 가져오자
+	/*ConstructorHelpers::FClassFinder<UCameraShakeBase> tempCam(TEXT("Blueprint'/Game/Blueprints/BP_CameraShake.BP_CameraShake_C'"));
+	if (tempCam.Succeeded())
+	{
+		cameraShake = tempCam.Class;
+	}*/
+
 
 	//Controller 의 회전값을 따라 갈 속성 셋팅
 	bUseControllerRotationYaw = true;
@@ -110,8 +120,8 @@ ATpsPlayer::ATpsPlayer()
 
 	//점프 횟수를 2개로 하자
 	JumpMaxCount = 2;
-	//움직이는 속력을 700으로 하자	
-	GetCharacterMovement()->MaxWalkSpeed = 700;
+	//움직이는 속력을 walkSpeed 로 하자	
+	GetCharacterMovement()->MaxWalkSpeed = walkSpeed;
 	//점프하는 속력을 600으로 하자
 	GetCharacterMovement()->JumpZVelocity = 600;
 }
@@ -152,6 +162,28 @@ void ATpsPlayer::Tick(float DeltaTime)
 	MoveAction(DeltaTime);
 	//회전	
 	//RotateAction();
+
+	//1. 만약에 bFire 가 true 라면
+	if (bFire == true)
+	{
+		//2. 현재시간을 흐르게 하고
+		currCamShakeTime += DeltaTime;
+		//3. 만약에 현재시간이 기준시간보다 작으면
+		if (currCamShakeTime < camShakeTime)
+		{
+			//4. 카메라를 랜덤하게 위치시키자
+			float randY = FMath::RandRange(-5.0f, 5.0f);
+			float randZ = FMath::RandRange(-5.0f, 5.0f);
+			compCam->SetRelativeLocation(FVector(0, randY, randZ));
+		}
+		//5. 그렇지 않으면 초기화(현재시간, bFire, 카메라위치)
+		else
+		{
+			currCamShakeTime = 0;
+			bFire = false;
+			compCam->SetRelativeLocation(FVector::ZeroVector);
+		}
+	}
 }
 
 void ATpsPlayer::MoveAction(float deltaTime)
@@ -205,6 +237,10 @@ void ATpsPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	//Ctrl 키
 	PlayerInputComponent->BindAction(TEXT("Zoom"), IE_Pressed, this, &ATpsPlayer::InputZoomIn);
 	PlayerInputComponent->BindAction(TEXT("Zoom"), IE_Released, this, &ATpsPlayer::InputZoomOut);
+
+	//Shift 키
+	PlayerInputComponent->BindAction(TEXT("Run"), IE_Pressed, this, &ATpsPlayer::InputRun);
+	PlayerInputComponent->BindAction(TEXT("Run"), IE_Released, this, &ATpsPlayer::InputRun);
 }
 
 
@@ -251,7 +287,21 @@ void ATpsPlayer::InputJump()
 }
 
 void ATpsPlayer::InputFire()
-{
+{	
+	//APlayerController* controller = GetWorld()->GetFirstPlayerController();
+	////카메라 흔들림을 멈추자
+	//controller->PlayerCameraManager->StopAllCameraShakes();
+	////카메라를 흔들자
+	//controller->PlayerCameraManager->StartCameraShake(cameraShake);
+
+	//총을 쐈다!!
+	bFire = true;
+
+
+	//총쏘는 애니메이션을 하자
+	UABP_Player* playerAnim = Cast<UABP_Player>(GetMesh()->GetAnimInstance());
+	playerAnim->PlayAttackAnim();
+
 	//만약에 Rifle 이 보이는 상태라면
 	if (compRifle->IsVisible() == true)
 	{
@@ -315,6 +365,23 @@ void ATpsPlayer::InputRifle()
 void ATpsPlayer::InputSniper()
 {
 	ChangeWeapon(true);
+}
+
+void ATpsPlayer::InputRun()
+{
+	UCharacterMovementComponent* compMove = GetCharacterMovement();
+	//1. 만약에 MaxWalkSpeed 값이 walkSpeed 보다 크다면(뛰고 있다면)
+	if (compMove->MaxWalkSpeed > walkSpeed)
+	{
+		//2. MaxWalkSpeed 값을 walkSpeed 로 하자
+		compMove->MaxWalkSpeed = walkSpeed;
+	}
+	//3. 그렇지 않으면(걷고 있다면)
+	else
+	{
+		//4. MaxWalkSpeed 값을 runSpeed 로 하자
+		compMove->MaxWalkSpeed = runSpeed;
+	}
 }
 
 void ATpsPlayer::ChangeWeapon(bool useSniper)

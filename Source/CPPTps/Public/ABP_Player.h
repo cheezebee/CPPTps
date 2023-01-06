@@ -15,6 +15,8 @@ class CPPTPS_API UABP_Player : public UAnimInstance
 	GENERATED_BODY()
 	
 public:
+	UABP_Player();
+
 	virtual void NativeBeginPlay() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
@@ -27,8 +29,18 @@ public:
 	// 앞, 뒤를 판별하는 변수
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float dirV = 0;
+
+	// 오른쪽, 왼쪽을 판별하는 변수
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float dirH = 0;
 	
 	//공중에 있는지 여부
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bAir = false;
+
+	UPROPERTY(EditAnywhere)
+	class UAnimMontage* attackAnimMontage;
+
+public:
+	void PlayAttackAnim();
 };

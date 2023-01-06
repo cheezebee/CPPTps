@@ -52,6 +52,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UUserWidget> commUIFactory;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UCameraShakeBase> cameraShake;
+
 
 	UPROPERTY()
 	class UUserWidget* commonUI;
@@ -67,7 +70,17 @@ public:
 	float mx = 0;
 	float my = 0;
 
-	float walkSpeed = 600;
+	//걷기 속력
+	float walkSpeed = 350;
+	//뛰기 속력
+	float runSpeed = 700;
+
+	//총을 쐈는지?
+	bool bFire = false;
+	//카메라 흔들리고 있는 시간
+	float currCamShakeTime = 0;
+	//카메라 흔들려야한는 시간
+	float camShakeTime = 0.5f;
 
 public:
 
@@ -82,6 +95,7 @@ public:
 	void InputFire();
 	void InputRifle();
 	void InputSniper();
+	void InputRun();
 	void ChangeWeapon(bool useSniper);
 
 	void InputZoomIn();
