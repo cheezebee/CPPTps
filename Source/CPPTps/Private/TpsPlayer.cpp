@@ -104,11 +104,11 @@ ATpsPlayer::ATpsPlayer()
 		GetMesh()->SetAnimInstanceClass(tempAnim.Class);
 	}
 
-	ConstructorHelpers::FClassFinder<UCameraShakeBase> tempCamShake(TEXT("Blueprint'/Game/Blueprints/BP_CameraShake.BP_CameraShake_C'"));
+	/*ConstructorHelpers::FClassFinder<UCameraShakeBase> tempCamShake(TEXT("Blueprint'/Game/Blueprints/BP_CameraShake.BP_CameraShake_C'"));
 	if (tempCamShake.Succeeded())
 	{
 		cameraShake = tempCamShake.Class;
-	}
+	}*/
 
 
 	//Controller 의 회전값을 따라 갈 속성 셋팅

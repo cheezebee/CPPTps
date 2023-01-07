@@ -14,7 +14,8 @@ enum class EEnemyState : uint8
 	Move,
 	Attack,
 	Damaged,
-	Die
+	Die,
+	AttackDelay
 };
 
 
@@ -47,10 +48,10 @@ public:
 	float idleDelayTime = 2;
 
 	float attackRange = 200;
-	float attackDelayTime = 2;
+	float attackDelayTime = 4;
 	
 
-	float maxHP = 3;
+	float maxHP = 5;
 	float currHP = 0;
 	float damagedDelayTime = 2;
 	float dieSpeed = 50;
@@ -61,6 +62,11 @@ public:
 	UPROPERTY(EditAnywhere)
 	class AEnemy* me;
 
+	UPROPERTY(EditAnywhere)
+	class UAnimEnemy* anim;
+
+	UPROPERTY(EditAnywhere)
+	class UAnimMontage* hitAnimMontage;
 
 public:
 	//´ë±â
@@ -73,6 +79,8 @@ public:
 	void UpdateDamaged();
 	//Á×À½
 	void UpdateDie();
+
+	void UpdateAttackDelay();
 
 	void ChangeState(EEnemyState state);
 

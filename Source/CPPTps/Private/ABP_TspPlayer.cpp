@@ -31,7 +31,7 @@ void UABP_TspPlayer::NativeUpdateAnimation(float DeltaSeconds)
 		//UE_LOG(LogTemp, Warning, TEXT("%f"), speed);
 
 		bAir = me->GetCharacterMovement()->IsFalling();
-	}
+	}		
 }
 
 void UABP_TspPlayer::PlayAttackAnim()

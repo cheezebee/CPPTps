@@ -6,6 +6,7 @@
 #include <Kismet/GameplayStatics.h>
 #include "Enemy.h"
 #include <Components/CapsuleComponent.h>
+#include "AnimEnemy.h"
 
 // Sets default values for this component's properties
 UEnemyFSM::UEnemyFSM()
@@ -14,7 +15,11 @@ UEnemyFSM::UEnemyFSM()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
+	ConstructorHelpers::FObjectFinder<UAnimMontage> tempMontage(TEXT("AnimMontage'/Game/Blueprints/AM_Enemy.AM_Enemy'"));
+	if (tempMontage.Succeeded())
+	{
+		hitAnimMontage = tempMontage.Object;
+	}
 }
 
 
@@ -26,6 +31,8 @@ void UEnemyFSM::BeginPlay()
 	target = Cast<ATpsPlayer>(UGameplayStatics::GetActorOfClass(GetWorld(), ATpsPlayer::StaticClass()));
 
 	me = Cast<AEnemy>(GetOwner());
+
+	anim = (UAnimEnemy*)(me->GetMesh()->GetAnimInstance());
 
 	currHP = maxHP;
 }
@@ -46,6 +53,9 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		break;
 	case EEnemyState::Attack:
 		UpdateAttack();
+		break;
+	case EEnemyState::AttackDelay:
+		UpdateAttackDelay();
 		break;
 	case EEnemyState::Damaged:
 		UpdateDamaged();
@@ -81,19 +91,25 @@ void UEnemyFSM::UpdateMove()
 
 void UEnemyFSM::UpdateAttack()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Attack!"));
+	ChangeState(EEnemyState::AttackDelay);
+}
+
+void UEnemyFSM::UpdateAttackDelay()
+{
 	if (IsWaitComplete(attackDelayTime))
 	{
 		//°Å¸®
 		float dist = FVector::Distance(target->GetActorLocation(), me->GetActorLocation());
 		if (dist < attackRange)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Attack!"));
+			ChangeState(EEnemyState::Attack);
 		}
 		else
 		{
 			ChangeState(EEnemyState::Idle);
 		}
-	}	
+	}
 }
 
 void UEnemyFSM::UpdateDamaged()
@@ -106,6 +122,7 @@ void UEnemyFSM::UpdateDamaged()
 
 void UEnemyFSM::UpdateDie()
 {
+	return;
 	FVector p0 = me->GetActorLocation();
 	FVector vt = FVector::DownVector * dieSpeed * GetWorld()->GetDeltaSeconds();
 	FVector p = p0 + vt;
@@ -129,6 +146,9 @@ void UEnemyFSM::ChangeState(EEnemyState state)
 	}
 
 	currState = state;
+
+	//anim->state = state;
+
 	currTime = 0;
 	
 	switch (state)
@@ -136,13 +156,21 @@ void UEnemyFSM::ChangeState(EEnemyState state)
 	case EEnemyState::Idle:
 		break;
 	case EEnemyState::Move:
+		me->PlayAnimMontage(hitAnimMontage, 1.0f, FName(TEXT("Move")));
 		break;
 	case EEnemyState::Attack:
-		currTime = attackDelayTime;
+		//currTime = attackDelayTime;
+		me->PlayAnimMontage(hitAnimMontage, 1.0f, FName(TEXT("Attack")));
 		break;
 	case EEnemyState::Damaged:
+	{
+		int32 rand = FMath::RandRange(0, 1);
+		FString sectionName = FString::Printf(TEXT("Damage%d"), rand);
+		me->PlayAnimMontage(hitAnimMontage, 1.0f, FName(*sectionName));
+	}
 		break;
 	case EEnemyState::Die:
+		me->PlayAnimMontage(hitAnimMontage, 1.0f, FName(TEXT("Die")));
 		me->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
 	}
