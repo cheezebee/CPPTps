@@ -7,6 +7,7 @@
 #include "Enemy.h"
 #include <Components/CapsuleComponent.h>
 #include <Kismet/KismetMathLibrary.h>
+#include "EnemyAnim.h"
 
 // Sets default values for this component's properties
 UEnemyFSM::UEnemyFSM()
@@ -15,7 +16,11 @@ UEnemyFSM::UEnemyFSM()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
+	ConstructorHelpers::FObjectFinder<UAnimMontage> tempMontage(TEXT("AnimMontage'/Game/Blueprints/AMT_EnemyDamaged.AMT_EnemyDamaged'"));
+	if (tempMontage.Succeeded())
+	{
+		damagedMontage = tempMontage.Object;
+	}
 }
 
 
@@ -28,6 +33,8 @@ void UEnemyFSM::BeginPlay()
 	target = Cast<ATpsPlayer>(UGameplayStatics::GetActorOfClass(GetWorld(), ATpsPlayer::StaticClass()));
 	//나를 찾자
 	me = Cast<AEnemy>(GetOwner());	
+
+	anim = Cast<UEnemyAnim>(me->GetMesh()->GetAnimInstance());
 
 	//나의 초기 체력을 셋팅하자
 	currHP = maxHP;
@@ -62,6 +69,9 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	case EEnemyState::ReturnPos:
 		UpdateReturnPos();
 		break;
+	case EEnemyState::AttackDelay:
+		UpdateAttackDelay();
+		break;
 	}
 }
 
@@ -80,6 +90,7 @@ void UEnemyFSM::UpdateIdle()
 		//상태를 Move 로 전환
 		ChangeState(EEnemyState::Move);
 	}
+
 }
 
 void UEnemyFSM::UpdateMove()
@@ -112,24 +123,10 @@ void UEnemyFSM::UpdateMove()
 
 void UEnemyFSM::UpdateAttack()
 {	
-	//2. 만약에 현재시간이 attackDelayTime 보다 커지면
-	if (IsWaitComplete(attackDelayTime))
-	{
-		//3. target 과 me 거리를 구하자.
-		FVector dir = target->GetActorLocation() - me->GetActorLocation();
-		float dist = dir.Length();
-		//4. 만약에 그거리가 attackRange보다 작으면
-		if (dist < attackRange)
-		{
-			//5. 공격!!! 출력하자
-			UE_LOG(LogTemp, Error, TEXT("Attack!!!"));
-		}
-		else
-		{
-			//6. 그렇지 않으면 Idle 상태로 가자
-			ChangeState(EEnemyState::Idle);
-		}
-	}
+	//5. 공격!!! 출력하자
+	UE_LOG(LogTemp, Error, TEXT("Attack!!!"));
+
+	ChangeState(EEnemyState::AttackDelay);
 }
 
 void UEnemyFSM::UpdateDamaged()
@@ -144,6 +141,7 @@ void UEnemyFSM::UpdateDamaged()
 
 void UEnemyFSM::UpdateDie()
 {
+	if (bDieMove == false) return;
 	//P = P0 + vt
 	//1. 아래로 내려가는 위치를 구한다.
 	FVector p0 = me->GetActorLocation();
@@ -181,6 +179,27 @@ void UEnemyFSM::UpdateReturnPos()
 	}
 }
 
+void UEnemyFSM::UpdateAttackDelay()
+{
+	//2. 만약에 현재시간이 attackDelayTime 보다 커지면
+	if (IsWaitComplete(attackDelayTime))
+	{
+		//3. target 과 me 거리를 구하자.
+		FVector dir = target->GetActorLocation() - me->GetActorLocation();
+		float dist = dir.Length();
+		//4. 만약에 그거리가 attackRange보다 작으면
+		if (dist < attackRange)
+		{
+			ChangeState(EEnemyState::Attack);			
+		}
+		else
+		{
+			//6. 그렇지 않으면 Idle 상태로 가자
+			ChangeState(EEnemyState::Idle);
+		}
+	}
+}
+
 void UEnemyFSM::ChangeState(EEnemyState state)
 {
 	//상태 변경 로그를 출력하자
@@ -194,16 +213,22 @@ void UEnemyFSM::ChangeState(EEnemyState state)
 
 	//현재 상태를 갱신
 	currState = state;
+	anim->state = state;
 
 	//상태에 따른 초기설정
 	switch (currState)
 	{
 	case EEnemyState::Attack:
-		currTime = attackDelayTime;
+		//currTime = attackDelayTime;
 		break;
-	case EEnemyState::Die:		
+	case EEnemyState::Damaged:
+		me->PlayAnimMontage(damagedMontage, 1.0f, FName(TEXT("Damage1")));
+		break;
+	case EEnemyState::Die:	
+		me->PlayAnimMontage(damagedMontage, 1.0f, FName(TEXT("Die")));
 		me->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
+
 	}
 }
 

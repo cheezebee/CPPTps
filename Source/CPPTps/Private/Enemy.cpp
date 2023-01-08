@@ -5,6 +5,7 @@
 #include "EnemyFSM.h"
 #include <GameFramework/CharacterMovementComponent.h>
 #include <Components/CapsuleComponent.h>
+#include "EnemyAnim.h"
 
 // Sets default values
 AEnemy::AEnemy()
@@ -21,6 +22,12 @@ AEnemy::AEnemy()
 	if (tempMesh.Succeeded())
 	{
 		GetMesh()->SetSkeletalMesh(tempMesh.Object);
+	}
+
+	ConstructorHelpers::FClassFinder<UEnemyAnim> tempAnim(TEXT("AnimBlueprint'/Game/Blueprints/ABP_EnemyAnim.ABP_EnemyAnim_C'"));
+	if (tempAnim.Succeeded())
+	{
+		GetMesh()->SetAnimInstanceClass(tempAnim.Class);
 	}
 
 	//FSM 컴포넌트 추가

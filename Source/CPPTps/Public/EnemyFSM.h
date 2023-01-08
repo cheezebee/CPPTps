@@ -15,7 +15,8 @@ enum class EEnemyState : uint8
 	Attack,
 	Damaged,
 	Die,
-	ReturnPos
+	ReturnPos,
+	AttackDelay
 };
 
 
@@ -49,6 +50,12 @@ public:
 	UPROPERTY(EditAnywhere)
 	class AEnemy* me;
 
+	UPROPERTY(EditAnywhere)
+	class UEnemyAnim* anim;
+
+	UPROPERTY(EditAnywhere)
+	class UAnimMontage* damagedMontage;
+
 	//현재시간
 	float currTime = 0;
 	//대기 상태 기다리는 시간
@@ -73,6 +80,7 @@ public:
 
 	//죽었을 때 내려가는 속력
 	float dieSpeed = 100;
+	bool bDieMove = false;
 
 	//이동할 수 있는 반경
 	float moveRange = 2000;
@@ -92,6 +100,8 @@ public:
 	void UpdateDie();
 	//리턴
 	void UpdateReturnPos();
+
+	void UpdateAttackDelay();
 
 	//상태 변경시 한번만!!! 호출 되는 함수
 	void ChangeState(EEnemyState state);
