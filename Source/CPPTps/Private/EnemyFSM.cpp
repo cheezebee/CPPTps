@@ -7,6 +7,7 @@
 #include "Enemy.h"
 #include <Components/CapsuleComponent.h>
 #include <Kismet/KismetMathLibrary.h>
+#include "EnemyAnim.h"
 
 // Sets default values for this component's properties
 UEnemyFSM::UEnemyFSM()
@@ -34,6 +35,7 @@ void UEnemyFSM::BeginPlay()
 
 	//나의 초기 위치를 저장하자
 	originPos = me->GetActorLocation();
+
 }
 
 
