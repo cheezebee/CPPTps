@@ -56,6 +56,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UAnimMontage* damagedMontage;
 
+	UPROPERTY(EditAnywhere)
+	class AAIController* ai;
+
 	//현재시간
 	float currTime = 0;
 	//대기 상태 기다리는 시간
@@ -114,4 +117,8 @@ public:
 
 	//타겟을 쫓아 갈 수 있니?
 	bool IsTargetTrace();
+
+
+	FVector randomPos;
+	FVector GetRandomPos(FVector center, float radius);
 };

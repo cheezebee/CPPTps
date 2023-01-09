@@ -8,6 +8,8 @@
 #include <Components/CapsuleComponent.h>
 #include <Kismet/KismetMathLibrary.h>
 #include "EnemyAnim.h"
+#include <AIModule/Classes/AIController.h>
+#include <NavigationSystem.h>
 
 // Sets default values for this component's properties
 UEnemyFSM::UEnemyFSM()
@@ -35,6 +37,8 @@ void UEnemyFSM::BeginPlay()
 	me = Cast<AEnemy>(GetOwner());	
 
 	anim = Cast<UEnemyAnim>(me->GetMesh()->GetAnimInstance());
+
+	ai = Cast<AAIController>(me->GetController());
 
 	//나의 초기 체력을 셋팅하자
 	currHP = maxHP;
@@ -77,24 +81,26 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 void UEnemyFSM::UpdateIdle()
 {
-	////idleDelayTime 이 지나면	
-	//if (IsWaitComplete(idleDelayTime))
-	//{
-	//	//현재상태를 Move 로 한다.
-	//	ChangeState(EEnemyState::Move);
-	//}
-	
-	//만약에 플레이어를 쫓아 갈 수 있니?
-	if (IsTargetTrace())
+	//idleDelayTime 이 지나면	
+	if (IsWaitComplete(idleDelayTime))
 	{
-		//상태를 Move 로 전환
+		//현재상태를 Move 로 한다.
 		ChangeState(EEnemyState::Move);
 	}
+	
+	////만약에 플레이어를 쫓아 갈 수 있니?
+	//if (IsTargetTrace())
+	//{
+	//	//상태를 Move 로 전환
+	//	ChangeState(EEnemyState::Move);
+	//}
 
 }
 
 void UEnemyFSM::UpdateMove()
 {
+	bool bTrace = IsTargetTrace();
+
 	//1. 타겟을 향하는 방향을 구하고(target - me)
 	FVector dir = target->GetActorLocation() - me->GetActorLocation();
 
@@ -108,17 +114,37 @@ void UEnemyFSM::UpdateMove()
 		ChangeState(EEnemyState::ReturnPos);
 	}
 	//만약에 target - me 거리가 공격범위보다 작으면
-	else if (dir.Length() < attackRange)
+	else if (bTrace)
 	{
-		//상태를 Attack 으로 변경
-		ChangeState(EEnemyState::Attack);
+		if (dir.Length() < attackRange)
+		{
+			//상태를 Attack 으로 변경
+			ChangeState(EEnemyState::Attack);
+		}
+		else
+		{
+			//2. 그 방향으로 이동하고 싶다.
+			//me->AddMovementInput(dir.GetSafeNormal());
+			ai->MoveToLocation(target->GetActorLocation());
+		}
 	}	
-	//그렇지 않으면
+	//그렇지 않으면	
 	else
 	{
-		//2. 그 방향으로 이동하고 싶다.
-		me->AddMovementInput(dir.GetSafeNormal());
+		EPathFollowingRequestResult::Type result = ai->MoveToLocation(randomPos);
+		if (result == EPathFollowingRequestResult::AlreadyAtGoal)
+		{
+			ChangeState(EEnemyState::Idle);
+		}
 	}
+}
+
+FVector UEnemyFSM::GetRandomPos(FVector center, float radius)
+{
+	UNavigationSystemV1* ns =UNavigationSystemV1::GetNavigationSystem(GetWorld());
+	FNavLocation loc;
+	ns->GetRandomReachablePointInRadius(center, radius, loc);
+	return loc.Location;
 }
 
 void UEnemyFSM::UpdateAttack()
@@ -162,21 +188,29 @@ void UEnemyFSM::UpdateDie()
 
 void UEnemyFSM::UpdateReturnPos()
 {
-	//1. 나 ----> 처음위치를 향하는 방향을 구한다.
-	FVector dir = originPos - me->GetActorLocation();
-
-	//2. 만약에 나 --- 처음위치의 거리가 10보다 작으면
-	if (dir.Length() < 10)
+	EPathFollowingRequestResult::Type result = ai->MoveToLocation(originPos);
+	if (result == EPathFollowingRequestResult::AlreadyAtGoal)
 	{
-		//3. Idle 상태로 전환
 		ChangeState(EEnemyState::Idle);
 	}
-	//4. 그렇지 않으면 
-	else
-	{
-		//5. 계속 1번에서 구한 방향으로 이동한다
-		me->AddMovementInput(dir.GetSafeNormal());
-	}
+
+
+	////1. 나 ----> 처음위치를 향하는 방향을 구한다.
+	//FVector dir = originPos - me->GetActorLocation();
+
+	////2. 만약에 나 --- 처음위치의 거리가 10보다 작으면
+	//if (dir.Length() < 10)
+	//{
+	//	//3. Idle 상태로 전환
+	//	ChangeState(EEnemyState::Idle);
+	//}
+	////4. 그렇지 않으면 
+	//else
+	//{
+
+	//	//5. 계속 1번에서 구한 방향으로 이동한다
+	//	me->AddMovementInput(dir.GetSafeNormal());
+	//}
 }
 
 void UEnemyFSM::UpdateAttackDelay()
@@ -215,6 +249,8 @@ void UEnemyFSM::ChangeState(EEnemyState state)
 	currState = state;
 	anim->state = state;
 
+	ai->StopMovement();
+
 	//상태에 따른 초기설정
 	switch (currState)
 	{
@@ -228,12 +264,15 @@ void UEnemyFSM::ChangeState(EEnemyState state)
 		me->PlayAnimMontage(damagedMontage, 1.0f, FName(TEXT("Die")));
 		me->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
-
+	case EEnemyState::Move:
+		randomPos = GetRandomPos(me->GetActorLocation(), 500);
+		break;
 	}
 }
 
 void UEnemyFSM::ReceiveDamage()
 {
+
 	//피를 줄이자
 	currHP--;
 	//hp 가 0보다 크면 Damage 상태로 전환
@@ -244,7 +283,6 @@ void UEnemyFSM::ReceiveDamage()
 	//그렇지 않으면 Die 상태로 전환
 	else
 	{
-
 		ChangeState(EEnemyState::Die);
 	}
 }
@@ -270,6 +308,17 @@ bool UEnemyFSM::IsWaitComplete(float delayTime)
 
 bool UEnemyFSM::IsTargetTrace()
 {
+	//FAIMoveRequest req;
+	////req.SetAcceptanceRadius(3); // stopdistance 와 같은 뜻
+	//req.SetGoalLocation(target->GetActorLocation());
+
+	//FPathFindingQuery query;
+	//ai->BuildPathfindingQuery(req, query);
+
+	//UNavigationSystemV1* ns = UNavigationSystemV1::GetNavigationSystem(GetWorld());
+	//FPathFindingResult r = ns->FindPathSync(query);
+	
+
 	//1. 나 ----> 플레이어를 향하는 벡터
 	FVector dir = target->GetActorLocation() - me->GetActorLocation();
 
@@ -281,7 +330,7 @@ bool UEnemyFSM::IsTargetTrace()
 	
 	//4. 만약에 3번에서 구한 값이 30보다 작고(시야각 60)
 	//   나 - 타겟 과의 거리가 traceRange 보다 작으면
-	if (angle < 30 && dir.Length() < traceRange)
+	if (angle < 45 && dir.Length() < traceRange)//r.Result == ENavigationQueryResult::Success) //)
 	{
 		//Enemy -----> target LineTrace 쏘자!!
 		FHitResult hitInfo;
