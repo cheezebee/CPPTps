@@ -13,9 +13,10 @@ enum class EEnemyState : uint8
 	Idle,
 	Move,
 	Attack,
+	AttackDelay,
 	Damaged,
 	Die,
-	ReturnPos
+	ReturnPos	
 };
 
 
@@ -48,6 +49,10 @@ public:
 	//나
 	UPROPERTY(EditAnywhere)
 	class AEnemy* me;
+	
+	//anim instance
+	UPROPERTY(EditAnywhere)
+	class UEnemyAnim* anim;
 
 	//현재시간
 	float currTime = 0;
@@ -61,7 +66,7 @@ public:
 	//공격범위
 	float attackRange = 200;
 	//공격 대기 시간
-	float attackDelayTime = 2;
+	float attackDelayTime = 4;
 
 	//피격 대기 시간
 	float damageDelayTime = 2;
@@ -86,12 +91,15 @@ public:
 	void UpdateMove();
 	//공격
 	void UpdateAttack();
+	//공격 대기
+	void UpdaetAttackDelay();	
 	//피격
 	void UpdateDamaged();
 	//죽음
 	void UpdateDie();
 	//리턴
 	void UpdateReturnPos();
+
 
 	//상태 변경시 한번만!!! 호출 되는 함수
 	void ChangeState(EEnemyState state);

@@ -29,6 +29,14 @@ void UEnemyFSM::BeginPlay()
 	target = Cast<ATpsPlayer>(UGameplayStatics::GetActorOfClass(GetWorld(), ATpsPlayer::StaticClass()));
 	//나를 찾자
 	me = Cast<AEnemy>(GetOwner());	
+	
+	//anim instance 찾자
+	/*USkeletalMeshComponent* mesh = me->GetMesh();
+	UAnimInstance animInstance = mesh->GetAnimInstance();
+	anim = Cast<UEnemyAnim>(animInstance);*/
+
+	anim = Cast<UEnemyAnim>(me->GetMesh()->GetAnimInstance());
+	
 
 	//나의 초기 체력을 셋팅하자
 	currHP = maxHP;
@@ -54,6 +62,9 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		break;
 	case EEnemyState::Attack:
 		UpdateAttack();
+		break;
+	case EEnemyState::AttackDelay:
+		UpdaetAttackDelay();
 		break;
 	case EEnemyState::Damaged:
 		UpdateDamaged();
@@ -114,6 +125,15 @@ void UEnemyFSM::UpdateMove()
 
 void UEnemyFSM::UpdateAttack()
 {	
+	//1. 공격!!! 출력하자
+	UE_LOG(LogTemp, Error, TEXT("Attack!!!"));
+
+	//2. 상태를 AttackDelay 로 전환
+	ChangeState(EEnemyState::AttackDelay);
+}
+
+void UEnemyFSM::UpdaetAttackDelay()
+{
 	//2. 만약에 현재시간이 attackDelayTime 보다 커지면
 	if (IsWaitComplete(attackDelayTime))
 	{
@@ -123,8 +143,8 @@ void UEnemyFSM::UpdateAttack()
 		//4. 만약에 그거리가 attackRange보다 작으면
 		if (dist < attackRange)
 		{
-			//5. 공격!!! 출력하자
-			UE_LOG(LogTemp, Error, TEXT("Attack!!!"));
+			//5. Attack 상태로 전환
+			ChangeState(EEnemyState::Attack);
 		}
 		else
 		{
@@ -192,16 +212,20 @@ void UEnemyFSM::ChangeState(EEnemyState state)
 		UE_LOG(LogTemp, Warning, TEXT("%s -----> %s"),
 			*enumPtr->GetNameStringByIndex((int32)currState),
 			*enumPtr->GetNameStringByIndex((int32)state));
-	}
+	}		
 
 	//현재 상태를 갱신
 	currState = state;
+
+	//anim 의 상태 갱신
+	anim->state = state;
+	
 
 	//상태에 따른 초기설정
 	switch (currState)
 	{
 	case EEnemyState::Attack:
-		currTime = attackDelayTime;
+		//currTime = attackDelayTime;
 		break;
 	case EEnemyState::Die:		
 		me->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
