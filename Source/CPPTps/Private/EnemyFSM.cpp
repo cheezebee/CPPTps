@@ -8,6 +8,7 @@
 #include <Components/CapsuleComponent.h>
 #include <Kismet/KismetMathLibrary.h>
 #include "EnemyAnim.h"
+#include <AIModule/Classes/AIController.h>
 
 // Sets default values for this component's properties
 UEnemyFSM::UEnemyFSM()
@@ -16,7 +17,12 @@ UEnemyFSM::UEnemyFSM()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
+	//몽타주 불러오자
+	ConstructorHelpers::FObjectFinder<UAnimMontage> tempMontage(TEXT("AnimMontage'/Game/Blueprints/AMT_EnemyDamage.AMT_EnemyDamage'"));
+	if (tempMontage.Succeeded())
+	{
+		damageMontage = tempMontage.Object;
+	}
 }
 
 
@@ -34,9 +40,11 @@ void UEnemyFSM::BeginPlay()
 	/*USkeletalMeshComponent* mesh = me->GetMesh();
 	UAnimInstance animInstance = mesh->GetAnimInstance();
 	anim = Cast<UEnemyAnim>(animInstance);*/
-
 	anim = Cast<UEnemyAnim>(me->GetMesh()->GetAnimInstance());
-	
+
+	//ai controller 찾자
+	ai = Cast<AAIController>(me->GetController());
+	//ai = UAIBlueprintHelperLibrary::GetAIController(me);
 
 	//나의 초기 체력을 셋팅하자
 	currHP = maxHP;
@@ -119,17 +127,16 @@ void UEnemyFSM::UpdateMove()
 	else
 	{
 		//2. 그 방향으로 이동하고 싶다.
-		me->AddMovementInput(dir.GetSafeNormal());
+		//me->AddMovementInput(dir.GetSafeNormal());
+		//ai 를 이용해서 목적지까지 이동하고 싶다.	
+		ai->MoveToLocation(target->GetActorLocation());
 	}
 }
 
 void UEnemyFSM::UpdateAttack()
 {	
-	//1. 공격!!! 출력하자
-	UE_LOG(LogTemp, Error, TEXT("Attack!!!"));
-
 	//2. 상태를 AttackDelay 로 전환
-	ChangeState(EEnemyState::AttackDelay);
+	ChangeState(EEnemyState::AttackDelay);	
 }
 
 void UEnemyFSM::UpdaetAttackDelay()
@@ -166,6 +173,9 @@ void UEnemyFSM::UpdateDamaged()
 
 void UEnemyFSM::UpdateDie()
 {
+	//만약에 bDieMove 가 false 라면 함수를 나가라
+	if (bDieMove == false) return;
+
 	//P = P0 + vt
 	//1. 아래로 내려가는 위치를 구한다.
 	FVector p0 = me->GetActorLocation();
@@ -186,21 +196,31 @@ void UEnemyFSM::UpdateDie()
 
 void UEnemyFSM::UpdateReturnPos()
 {
-	//1. 나 ----> 처음위치를 향하는 방향을 구한다.
-	FVector dir = originPos - me->GetActorLocation();
+	//목적지로 이동하자
+	EPathFollowingRequestResult::Type result = ai->MoveToLocation(originPos);
 
-	//2. 만약에 나 --- 처음위치의 거리가 10보다 작으면
-	if (dir.Length() < 10)
+	//만약에 목적지에 도착했다면
+	if (result == EPathFollowingRequestResult::AlreadyAtGoal)
 	{
-		//3. Idle 상태로 전환
+		//Idle 상태로 전환
 		ChangeState(EEnemyState::Idle);
 	}
-	//4. 그렇지 않으면 
-	else
-	{
-		//5. 계속 1번에서 구한 방향으로 이동한다
-		me->AddMovementInput(dir.GetSafeNormal());
-	}
+
+	////1. 나 ----> 처음위치를 향하는 방향을 구한다.
+	//FVector dir = originPos - me->GetActorLocation();
+
+	////2. 만약에 나 --- 처음위치의 거리가 10보다 작으면
+	//if (dir.Length() < 10)
+	//{
+	//	//3. Idle 상태로 전환
+	//	ChangeState(EEnemyState::Idle);
+	//}
+	////4. 그렇지 않으면 
+	//else
+	//{
+	//	//5. 계속 1번에서 구한 방향으로 이동한다
+	//	me->AddMovementInput(dir.GetSafeNormal());
+	//}
 }
 
 void UEnemyFSM::ChangeState(EEnemyState state)
@@ -219,7 +239,12 @@ void UEnemyFSM::ChangeState(EEnemyState state)
 
 	//anim 의 상태 갱신
 	anim->state = state;
-	
+
+	//현재 시간 초기화
+	currTime = 0;	
+
+	//ai 의 움직임 멈추자
+	ai->StopMovement();
 
 	//상태에 따른 초기설정
 	switch (currState)
@@ -227,8 +252,21 @@ void UEnemyFSM::ChangeState(EEnemyState state)
 	case EEnemyState::Attack:
 		//currTime = attackDelayTime;
 		break;
+	case EEnemyState::Damaged:
+	{
+		//1. 랜덤한 값을 뽑는다 (0, 1 중)
+		int32 rand = FMath::RandRange(0, 1);
+		//2. Damage0, Damage1 이란 문자열을 만든다.
+		FString sectionName = FString::Printf(TEXT("Damage%d"), rand);
+		//3. 몽타주를 플레이한다.
+		me->PlayAnimMontage(damageMontage, 1.0f, FName(*sectionName));
+	}
+		break;
 	case EEnemyState::Die:		
+		//충돌안되게 설정
 		me->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		//Die 몽타주 실행
+		me->PlayAnimMontage(damageMontage, 1.0f, FName(TEXT("Die")));
 		break;
 	}
 }

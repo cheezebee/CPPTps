@@ -71,7 +71,7 @@ public:
 	float my = 0;
 
 	//°È±â ¼Ó·Â
-	float walkSpeed = 350;
+	float walkSpeed = 2350;
 	//¶Ù±â ¼Ó·Â
 	float runSpeed = 700;
 

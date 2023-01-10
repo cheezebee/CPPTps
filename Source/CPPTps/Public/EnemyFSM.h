@@ -54,6 +54,14 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UEnemyAnim* anim;
 
+	//anim montage
+	UPROPERTY(EditAnywhere)
+	class UAnimMontage* damageMontage;
+
+	//ai controller 
+	UPROPERTY(EditAnywhere)
+	class AAIController* ai;
+
 	//현재시간
 	float currTime = 0;
 	//대기 상태 기다리는 시간
@@ -61,7 +69,6 @@ public:
 
 	//쫓아 갈 수 있는 범위
 	float traceRange = 1000;
-
 
 	//공격범위
 	float attackRange = 200;
@@ -74,10 +81,12 @@ public:
 	//현재 체력
 	float currHP;
 	//최대 체력
-	float maxHP = 3;
+	float maxHP = 10;
 
 	//죽었을 때 내려가는 속력
 	float dieSpeed = 100;
+	//죽었을 때 내려가게 하는 변수
+	bool bDieMove = false;
 
 	//이동할 수 있는 반경
 	float moveRange = 2000;

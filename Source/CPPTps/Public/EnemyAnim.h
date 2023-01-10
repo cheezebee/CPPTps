@@ -18,4 +18,10 @@ class CPPTPS_API UEnemyAnim : public UAnimInstance
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	EEnemyState state;
+
+	UFUNCTION()
+	void AnimNotify_DieEnd();
+
+	UFUNCTION()
+	void AnimNotify_EnemyAttack();
 };
