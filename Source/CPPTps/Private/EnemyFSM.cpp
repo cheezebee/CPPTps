@@ -14,6 +14,7 @@
 // Sets default values for this component's properties
 UEnemyFSM::UEnemyFSM()
 {
+	bAutoActivate = true;
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
@@ -98,7 +99,7 @@ void UEnemyFSM::UpdateIdle()
 }
 
 void UEnemyFSM::UpdateMove()
-{
+{	
 	bool bTrace = IsTargetTrace();
 
 	//1. 타겟을 향하는 방향을 구하고(target - me)
@@ -177,7 +178,13 @@ void UEnemyFSM::UpdateDie()
 	//2. 만약에 p.Z 가 -200 보다 작으면 파괴한다
 	if (p.Z < -200)
 	{
-		me->Destroy();
+		//me->Destroy();
+
+		ChangeState(EEnemyState::Idle);
+		currHP = maxHP;
+		bDieMove = false;
+		me->StopAnimMontage(damagedMontage);		
+		me->SetActive(false);
 	}
 	//3. 그렇지 않으면 해당 위치로 셋팅한다
 	else
@@ -248,6 +255,7 @@ void UEnemyFSM::ChangeState(EEnemyState state)
 	//현재 상태를 갱신
 	currState = state;
 	anim->state = state;
+	currTime = 0;
 
 	ai->StopMovement();
 

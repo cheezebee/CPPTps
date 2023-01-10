@@ -6,10 +6,11 @@
 #include <GameFramework/CharacterMovementComponent.h>
 #include <Components/CapsuleComponent.h>
 #include "EnemyAnim.h"
+#include <NavigationInvokerComponent.h>
 
 // Sets default values
 AEnemy::AEnemy()
-{
+{	
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -32,6 +33,11 @@ AEnemy::AEnemy()
 
 	//FSM 컴포넌트 추가
 	fsm = CreateDefaultSubobject<UEnemyFSM>(TEXT("FSM"));
+
+	naviInvoker = CreateDefaultSubobject<UNavigationInvokerComponent>(TEXT("NAVI"));	
+
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
 	
 	//LineTrace 에 김자가 되게 셋팅	
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
@@ -51,14 +57,31 @@ void AEnemy::BeginPlay()
 // Called every frame
 void AEnemy::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-
+	Super::Tick(DeltaTime);	
 }
 
 // Called to bind functionality to input
 void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
+	
 }
 
+
+void AEnemy::SetActive(bool bActive)
+{
+	if (bActive)
+	{		
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
+	else
+	{		
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);		
+		dieDelegate.ExecuteIfBound(this);
+	}
+	GetMesh()->SetActive(bActive);
+	GetMesh()->SetVisibility(bActive);
+	GetCharacterMovement()->SetActive(bActive);
+	GetCapsuleComponent()->SetActive(bActive);
+	fsm->SetActive(bActive);
+}

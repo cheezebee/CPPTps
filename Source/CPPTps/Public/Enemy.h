@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "Enemy.generated.h"
 
+DECLARE_DELEGATE_OneParam(FEnemyDieDelegate, class AEnemy*);
+
 UCLASS()
 class CPPTPS_API AEnemy : public ACharacter
 {
@@ -31,4 +33,13 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UEnemyFSM* fsm;
 
+	UPROPERTY(EditAnywhere)
+	class UNavigationInvokerComponent* naviInvoker;
+
+	//UPROPERTY  하지 말자
+	FEnemyDieDelegate dieDelegate;
+
+public:
+	void SetActive(bool bActive);
+	
 };
