@@ -36,6 +36,9 @@ AEnemy::AEnemy()
 	//LineTrace 에 김자가 되게 셋팅	
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	//Auto possess ai 설정
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
 // Called when the game starts or when spawned

@@ -35,4 +35,11 @@ public:
 	//Enemy °øÀå
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AEnemy> enemyFactory;
+
+	UPROPERTY(EditAnywhere)
+	TArray<AActor*> spawnPosArray;
+
+public:
+	int32 spawnIdx = 0;
+	void FindSpawnPos();
 };
