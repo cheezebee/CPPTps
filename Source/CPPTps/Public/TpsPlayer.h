@@ -41,39 +41,13 @@ public:
 	class UStaticMeshComponent* compSniper;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class ABullet> bulletFactory;
-
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<class UUserWidget> sniperUIFactory;
-
-	UPROPERTY()
-	class UUserWidget* sniperUI;
-
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<class UUserWidget> commUIFactory;
-
-	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UCameraShakeBase> cameraShake;
 
-
-	UPROPERTY()
-	class UUserWidget* commonUI;
-
 	UPROPERTY(EditAnywhere)
-	class UParticleSystem* exploEffect;
-
-	//W, A, S, D 키에 따른 값 셋팅
-	float h = 0;
-	float v = 0;
-
-	//마우스 움직임에 따른 값 셋팅
-	float mx = 0;
-	float my = 0;
-
-	//걷기 속력
-	float walkSpeed = 2350;
-	//뛰기 속력
-	float runSpeed = 700;
+	class UPlayerMove* playerMove;
+	UPROPERTY(EditAnywhere)
+	class UPlayerFire* playerFire;
+	
 
 	//총을 쐈는지?
 	bool bFire = false;
@@ -81,23 +55,5 @@ public:
 	float currCamShakeTime = 0;
 	//카메라 흔들려야한는 시간
 	float camShakeTime = 0.5f;
-
-public:
-
-	void MoveAction(float deltaTime);
-	void RotateAction();
-
-	void InputHorizontal(float value);
-	void InputVertical(float value);
-	void InputLookUp(float value);
-	void InputTurn(float value);
-	void InputJump();
-	void InputFire();
-	void InputRifle();
-	void InputSniper();
-	void InputRun();
-	void ChangeWeapon(bool useSniper);
-
-	void InputZoomIn();
-	void InputZoomOut();
+	
 };
