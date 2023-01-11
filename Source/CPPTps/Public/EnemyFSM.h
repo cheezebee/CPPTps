@@ -39,6 +39,7 @@ public:
 
 
 public:
+	
 	//현재상태
 	UPROPERTY(EditAnywhere)
 	EEnemyState currState = EEnemyState::Idle;
