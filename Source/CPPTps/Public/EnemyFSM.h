@@ -93,6 +93,9 @@ public:
 	//처음 위치를 담아놓을 변수
 	FVector originPos;
 
+	//랜덤한 위치
+	FVector randPos;
+
 public:
 	//대기
 	void UpdateIdle();
@@ -121,4 +124,7 @@ public:
 
 	//타겟을 쫓아 갈 수 있니?
 	bool IsTargetTrace();
+
+	//해당 위치까지 도착하면 상태를 Idle 로 전환하는 함수
+	void MoveToPos(FVector pos);
 };

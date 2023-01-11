@@ -9,6 +9,7 @@
 #include <Kismet/KismetMathLibrary.h>
 #include "EnemyAnim.h"
 #include <AIModule/Classes/AIController.h>
+#include <NavigationSystem.h>
 
 // Sets default values for this component's properties
 UEnemyFSM::UEnemyFSM()
@@ -88,23 +89,28 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 void UEnemyFSM::UpdateIdle()
 {
-	////idleDelayTime 이 지나면	
-	//if (IsWaitComplete(idleDelayTime))
-	//{
-	//	//현재상태를 Move 로 한다.
-	//	ChangeState(EEnemyState::Move);
-	//}
-	
 	//만약에 플레이어를 쫓아 갈 수 있니?
 	if (IsTargetTrace())
 	{
 		//상태를 Move 로 전환
 		ChangeState(EEnemyState::Move);
 	}
+	else
+	{
+		//idleDelayTime 이 지나면	
+		if (IsWaitComplete(idleDelayTime))
+		{
+			//현재상태를 Move 로 한다.
+			ChangeState(EEnemyState::Move);
+		}
+	}
 }
 
 void UEnemyFSM::UpdateMove()
 {
+	// 시야에 들어왔는지 여부
+	bool bTrace = IsTargetTrace();
+
 	//1. 타겟을 향하는 방향을 구하고(target - me)
 	FVector dir = target->GetActorLocation() - me->GetActorLocation();
 
@@ -117,20 +123,31 @@ void UEnemyFSM::UpdateMove()
 		//상태를 ReturnPos 로 변경
 		ChangeState(EEnemyState::ReturnPos);
 	}
-	//만약에 target - me 거리가 공격범위보다 작으면
-	else if (dir.Length() < attackRange)
+	//만약에 시야에 들어왔다면
+	else if (bTrace)
 	{
-		//상태를 Attack 으로 변경
-		ChangeState(EEnemyState::Attack);
-	}	
-	//그렇지 않으면
+		//만약에 target - me 거리가 공격범위보다 작으면
+		if (dir.Length() < attackRange)
+		{
+			//상태를 Attack 으로 변경
+			ChangeState(EEnemyState::Attack);
+		}
+		//그렇지 않으면
+		else
+		{
+			//2. 그 방향으로 이동하고 싶다.
+			//me->AddMovementInput(dir.GetSafeNormal());
+			//ai 를 이용해서 목적지까지 이동하고 싶다.	
+			ai->MoveToLocation(target->GetActorLocation());
+		}
+	}
+	//시야에 들어오지 않았다면
 	else
 	{
-		//2. 그 방향으로 이동하고 싶다.
-		//me->AddMovementInput(dir.GetSafeNormal());
-		//ai 를 이용해서 목적지까지 이동하고 싶다.	
-		ai->MoveToLocation(target->GetActorLocation());
+		// 랜덤한 위치까지 도착한 후 Idle 상태로 전환
+		MoveToPos(randPos);
 	}
+	
 }
 
 void UEnemyFSM::UpdateAttack()
@@ -196,15 +213,9 @@ void UEnemyFSM::UpdateDie()
 
 void UEnemyFSM::UpdateReturnPos()
 {
-	//목적지로 이동하자
-	EPathFollowingRequestResult::Type result = ai->MoveToLocation(originPos);
-
-	//만약에 목적지에 도착했다면
-	if (result == EPathFollowingRequestResult::AlreadyAtGoal)
-	{
-		//Idle 상태로 전환
-		ChangeState(EEnemyState::Idle);
-	}
+	// 처음 위치로 가서 도착하면 Idle 상태로 전환한다.
+	MoveToPos(originPos);
+	
 
 	////1. 나 ----> 처음위치를 향하는 방향을 구한다.
 	//FVector dir = originPos - me->GetActorLocation();
@@ -251,6 +262,16 @@ void UEnemyFSM::ChangeState(EEnemyState state)
 	{
 	case EEnemyState::Attack:
 		//currTime = attackDelayTime;
+		break;
+	case EEnemyState::Move:
+	{
+		//네비게이션 시스템 가져오자
+		UNavigationSystemV1* ns = UNavigationSystemV1::GetNavigationSystem(GetWorld());
+		//랜덤한 위치를 얻오자
+		FNavLocation loc;
+		ns->GetRandomReachablePointInRadius(originPos, 1000, loc);
+		randPos = loc.Location;
+	}
 		break;
 	case EEnemyState::Damaged:
 	{
@@ -349,4 +370,17 @@ bool UEnemyFSM::IsTargetTrace()
 	//6. 그렇지 않으면 false 반환	
 	return false;
 
+}
+
+void UEnemyFSM::MoveToPos(FVector pos)
+{
+	//해당 위치(pos) 로 간다
+	EPathFollowingRequestResult::Type result = ai->MoveToLocation(pos);
+
+	//만약에 목적지에 도착했다면
+	if (result == EPathFollowingRequestResult::AlreadyAtGoal)
+	{
+		//Idle 상태로 전환
+		ChangeState(EEnemyState::Idle);
+	}
 }
