@@ -31,12 +31,34 @@ void AEnemyManager::BeginPlay()
 
 	//SpawnPos 셋팅
 	FindSpawnPos();
+
+	//적을 미리 10개 만들자
+	for (int32 i = 0; i < 3; i++)
+	{
+		//어떤 상황이던 무조건 생성한다는 옵션
+		FActorSpawnParameters param;
+		param.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		//적 생성
+		AEnemy* e = GetWorld()->SpawnActor<AEnemy>(enemyFactory, GetActorLocation(), GetActorRotation(), param);		
+		//적을 비활성화 하자
+		e->SetActive(false);
+		//생성된 적을 탄창(배열)에 담자
+		enemyArray.Add(e);
+	}
 }
 
 // Called every frame
 void AEnemyManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	//만약에 적 탄창 갯수가 0이면 함수를 나가자
+	if (enemyArray.Num() == 0)
+	{
+		//애너미를 생성하자
+		return;
+	}
 
 	//시간을 흐르게 한다
 	currTime += DeltaTime;
@@ -45,14 +67,28 @@ void AEnemyManager::Tick(float DeltaTime)
 	{
 		//어느 위치에 만들지 고른다
 		//int32 rand = FMath::RandRange(0, spawnPosArray.Num() - 1);
-		//0 ~ 갯수 순서대로
-		
-		//에너미를 만든다
-		GetWorld()->SpawnActor<AEnemy>(
-			enemyFactory, 
-			spawnPosArray[spawnIdx]->GetActorLocation(),
-			spawnPosArray[spawnIdx]->GetActorRotation());
+		//선택된 spawnPos 를 잠시 담아두자
+		AActor* spawn = spawnPosArray[spawnIdx];
 
+		//1. 랜덤한 yaw 값 구하자( 0 ~ 360 )
+		float yaw = FMath::RandRange(0.0f, 360.0f);
+		//2. 구한 값을 spawnPosArray 의 yaw 값에 셋팅
+		spawn->SetActorRotation(FRotator(0, yaw, 0));
+		//3. 랜덤한 길이 구하자( 0 ~ 500 )
+		float length = FMath::RandRange(300.0f, 1000.0f);
+		//4. spawnPosArray 앞방향 * 랜덤 길이
+		FVector pos = spawn->GetActorForwardVector()* length;
+		//5. 4번에서 구한 벡터 + spawnPosArray 의 위치		
+				
+		//적 위치, 회전 셋팅
+		enemyArray[0]->SetActorLocation(spawn->GetActorLocation() + pos);
+		enemyArray[0]->SetActorRotation(spawn->GetActorRotation());
+		//적 탄창에서 0번째 놈 활성화 
+		enemyArray[0]->SetActive(true);
+		//enemyArray 에서 빼자
+		enemyArray.RemoveAt(0);
+
+		//0 ~ 갯수 순서대로
 		//다음 자리로 설정
 		spawnIdx++;
 		spawnIdx = spawnIdx % spawnPosArray.Num();

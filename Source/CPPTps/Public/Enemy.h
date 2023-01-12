@@ -31,4 +31,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UEnemyFSM* fsm;
 
+
+	// 활성 / 비활성 하는 기능
+	void SetActive(bool bActive);
+
 };

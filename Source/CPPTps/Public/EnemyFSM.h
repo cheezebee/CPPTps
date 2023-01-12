@@ -82,7 +82,7 @@ public:
 	//현재 체력
 	float currHP;
 	//최대 체력
-	float maxHP = 10;
+	float maxHP = 1;
 
 	//죽었을 때 내려가는 속력
 	float dieSpeed = 100;

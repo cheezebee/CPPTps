@@ -36,8 +36,13 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AEnemy> enemyFactory;
 
+	//적 생성 위치들
 	UPROPERTY(EditAnywhere)
 	TArray<AActor*> spawnPosArray;
+
+	//Enemy 탄창
+	UPROPERTY(EditAnywhere)
+	TArray<class AEnemy*> enemyArray;
 
 public:
 	int32 spawnIdx = 0;

@@ -10,13 +10,17 @@
 #include "EnemyAnim.h"
 #include <AIModule/Classes/AIController.h>
 #include <NavigationSystem.h>
+#include "EnemyManager.h"
 
 // Sets default values for this component's properties
 UEnemyFSM::UEnemyFSM()
 {
+	//SetActive (true / false) 작동 되게 하자!
+	bAutoActivate = true;
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
+
 
 	//몽타주 불러오자
 	ConstructorHelpers::FObjectFinder<UAnimMontage> tempMontage(TEXT("AnimMontage'/Game/Blueprints/AMT_EnemyDamage.AMT_EnemyDamage'"));
@@ -202,7 +206,23 @@ void UEnemyFSM::UpdateDie()
 	//2. 만약에 p.Z 가 -200 보다 작으면 파괴한다
 	if (p.Z < -200)
 	{
-		me->Destroy();
+		//me->Destroy();
+		
+		//나를 비활성화
+		me->SetActive(false);
+		//EnemyManager 찾자
+		AActor* actor = UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyManager::StaticClass());
+		AEnemyManager* am = Cast<AEnemyManager>(actor);
+		//찾은 놈에서 enemyArray 에 나를 다시 담자
+		am->enemyArray.Add(me);
+		//currHP 를 maxHP
+		currHP = maxHP;
+		//상태를 Idle
+		ChangeState(EEnemyState::Idle);
+		//몽타주를 멈춰준다
+		me->StopAnimMontage(damageMontage);
+		//bDieMove 를 false 로!
+		bDieMove = false;
 	}
 	//3. 그렇지 않으면 해당 위치로 셋팅한다
 	else

@@ -12,6 +12,7 @@ AEnemy::AEnemy()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	
 
 	//Mesh 의 위치를 셋팅
 	GetMesh()->SetRelativeLocation(FVector(0, 0, -90));
@@ -63,5 +64,32 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+void AEnemy::SetActive(bool bActive)
+{
+	// 활성화
+	if (bActive)
+	{
+		//충돌 활성
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		//생성 위치 재설정
+		fsm->originPos = GetActorLocation();
+	}
+	// 비활성화
+	else
+	{
+		//충돌 비활성
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	//메쉬를 활성 / 비활성
+	GetMesh()->SetActive(bActive);
+	//메쉬를 보이고 / 안보이고
+	GetMesh()->SetVisibility(bActive);
+	//캐릭터 무브먼트 활성 / 비활성
+	GetCharacterMovement()->SetActive(bActive);
+	//fsm 활성 / 비활성
+	fsm->SetActive(bActive);
 }
 
