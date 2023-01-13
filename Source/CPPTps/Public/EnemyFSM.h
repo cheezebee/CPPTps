@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "EnemyFSM.generated.h"
 
+
+
 //상태 정의
 UENUM(BlueprintType)
 enum class EEnemyState : uint8

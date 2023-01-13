@@ -47,4 +47,7 @@ public:
 public:
 	int32 spawnIdx = 0;
 	void FindSpawnPos();
+
+	UFUNCTION()
+	void AddEnemy(class AEnemy* e);
 };

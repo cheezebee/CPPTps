@@ -210,11 +210,11 @@ void UEnemyFSM::UpdateDie()
 		
 		//나를 비활성화
 		me->SetActive(false);
-		//EnemyManager 찾자
-		AActor* actor = UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyManager::StaticClass());
-		AEnemyManager* am = Cast<AEnemyManager>(actor);
-		//찾은 놈에서 enemyArray 에 나를 다시 담자
-		am->enemyArray.Add(me);
+		////EnemyManager 찾자
+		//AActor* actor = UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyManager::StaticClass());
+		//AEnemyManager* am = Cast<AEnemyManager>(actor);
+		////찾은 놈에서 enemyArray 에 나를 다시 담자
+		//am->enemyArray.Add(me);
 		//currHP 를 maxHP
 		currHP = maxHP;
 		//상태를 Idle

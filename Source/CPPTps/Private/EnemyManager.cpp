@@ -41,10 +41,10 @@ void AEnemyManager::BeginPlay()
 
 		//적 생성
 		AEnemy* e = GetWorld()->SpawnActor<AEnemy>(enemyFactory, GetActorLocation(), GetActorRotation(), param);		
+		//적이 죽었을 때 호출되는 함수 등록
+		e->dieDelegate.BindUObject(this, &AEnemyManager::AddEnemy);
 		//적을 비활성화 하자
 		e->SetActive(false);
-		//생성된 적을 탄창(배열)에 담자
-		enemyArray.Add(e);
 	}
 }
 
@@ -124,4 +124,9 @@ void AEnemyManager::FindSpawnPos()
 			spawnPosArray.Add(actors[i]);
 		}
 	}
+}
+
+void AEnemyManager::AddEnemy(AEnemy* e)
+{
+	enemyArray.Add(e);
 }
