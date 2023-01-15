@@ -9,6 +9,9 @@
 #include "ABP_Player.h"
 #include "PlayerMove.h"
 #include "PlayerFire.h"
+#include "MainUI.h"
+#include "MiniMap.h"
+#include <Engine/EngineTypes.h>
 
 
 // Sets default values
@@ -77,6 +80,20 @@ ATpsPlayer::ATpsPlayer()
 	playerMove = CreateDefaultSubobject<UPlayerMove>(TEXT("PM"));
 	playerFire = CreateDefaultSubobject<UPlayerFire>(TEXT("PF"));
 
+	ConstructorHelpers::FClassFinder<UMainUI> tempMain(TEXT("WidgetBlueprint'/Game/Blueprints/BP_MainUI.BP_MainUI_C'"));
+	if (tempMain.Succeeded())
+	{
+		mainUIFactory = tempMain.Class;
+	}
+
+	mainUI = CreateWidget<UMainUI>(GetWorld(), mainUIFactory);
+
+	ConstructorHelpers::FClassFinder<AMiniMap> tempMiniMap(TEXT("Blueprint'/Game/Blueprints/BP_Minimap.BP_Minimap_C'"));
+	if (tempMiniMap.Succeeded())
+	{
+		miniMapFactory = tempMiniMap.Class;
+	}
+
 	//Camera Shake 블루프린트 가져오자
 	/*ConstructorHelpers::FClassFinder<UCameraShakeBase> tempCam(TEXT("Blueprint'/Game/Blueprints/BP_CameraShake.BP_CameraShake_C'"));
 	if (tempCam.Succeeded())
@@ -88,10 +105,18 @@ ATpsPlayer::ATpsPlayer()
 // Called when the game starts or when spawned
 void ATpsPlayer::BeginPlay()
 {
+
 	Super::BeginPlay();
 	
+	currHP = maxHP;
+	mainUI->AddToViewport();
 	//CapsuleCompoenent 의 ECC_Visibility -> ECR_Block 로 셋팅
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+
+	AMiniMap* miniMap = GetWorld()->SpawnActor<AMiniMap>(miniMapFactory);
+	miniMap->Init(this);
+	//miniMap->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
+
 }
 
 // Called every frame
@@ -131,6 +156,22 @@ void ATpsPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 	playerMove->SetupInputBinding(PlayerInputComponent);
 	playerFire->SetupInputBinding(PlayerInputComponent);
+}
+
+void ATpsPlayer::OnHit(float damage)
+{
+	currHP -= damage;
+
+
+	if (currHP <= 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Player Die!!"));
+	}
+	else
+	{
+		mainUI->UpdateCurrHP(currHP, maxHP);
+		UE_LOG(LogTemp, Warning, TEXT("OnHit!!"));
+	}
 }
 
 

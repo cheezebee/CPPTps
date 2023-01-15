@@ -10,6 +10,7 @@
 #include <Camera/CameraComponent.h>
 #include <Kismet/GameplayStatics.h>
 #include <Particles/ParticleSystem.h>
+#include "MainUI.h"
 
 UPlayerFire::UPlayerFire()
 {
@@ -46,15 +47,15 @@ void UPlayerFire::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//처음 총 셋팅을 Sniper 로 하자
-	ChangeWeapon(true);
-
 	//SniperUI 만들자
 	sniperUI = CreateWidget(GetWorld(), sniperUIFactory);
 
 	//CommonUI 만들고 보이게 하자
 	commonUI = CreateWidget(GetWorld(), commUIFactory);
-	commonUI->AddToViewport();
+	commonUI->AddToViewport();	
+
+	//처음 총 셋팅을 Sniper 로 하자
+	ChangeWeapon(true);
 }
 
 void UPlayerFire::SetupInputBinding(class UInputComponent* PlayerInputComponent)
@@ -172,6 +173,8 @@ void UPlayerFire::ChangeWeapon(bool useSniper)
 
 	me->compRifle->SetVisibility(!useSniper);
 	me->compSniper->SetVisibility(useSniper);
+	
+	me->mainUI->UpdateWeapon(useSniper);
 
 	////2-1 만약에 useSniper 가 true 이면
 	//if (useSniper == true)

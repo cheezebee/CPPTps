@@ -151,7 +151,8 @@ FVector UEnemyFSM::GetRandomPos(FVector center, float radius)
 void UEnemyFSM::UpdateAttack()
 {	
 	//5. 공격!!! 출력하자
-	UE_LOG(LogTemp, Error, TEXT("Attack!!!"));
+	//UE_LOG(LogTemp, Error, TEXT("Attack!!!"));
+	target->OnHit(1);
 
 	ChangeState(EEnemyState::AttackDelay);
 }

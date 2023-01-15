@@ -47,6 +47,15 @@ public:
 	class UPlayerMove* playerMove;
 	UPROPERTY(EditAnywhere)
 	class UPlayerFire* playerFire;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UMainUI> mainUIFactory;
+	UPROPERTY(EditAnywhere)
+	class UMainUI* mainUI;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AMiniMap> miniMapFactory;
+	
 	
 
 	//총을 쐈는지?
@@ -55,5 +64,11 @@ public:
 	float currCamShakeTime = 0;
 	//카메라 흔들려야한는 시간
 	float camShakeTime = 0.5f;
+
+	float currHP = 0;
+	float maxHP = 50;
+
+public:
+	void OnHit(float damage);
 	
 };
