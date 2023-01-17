@@ -55,6 +55,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AMiniMap> miniMapFactory;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UGameOverUI> gameOverUIFactory;
 	
 	
 

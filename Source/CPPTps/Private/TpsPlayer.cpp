@@ -12,6 +12,7 @@
 #include "MainUI.h"
 #include "MiniMap.h"
 #include <Engine/EngineTypes.h>
+#include "GameOverUI.h"
 
 
 // Sets default values
@@ -94,6 +95,12 @@ ATpsPlayer::ATpsPlayer()
 		miniMapFactory = tempMiniMap.Class;
 	}
 
+	ConstructorHelpers::FClassFinder<UGameOverUI> tempGameOver(TEXT("WidgetBlueprint'/Game/Blueprints/BP_GameOverUI.BP_GameOverUI_C'"));
+	if (tempGameOver.Succeeded())
+	{
+		gameOverUIFactory = tempGameOver.Class;
+	}
+
 	//Camera Shake 블루프린트 가져오자
 	/*ConstructorHelpers::FClassFinder<UCameraShakeBase> tempCam(TEXT("Blueprint'/Game/Blueprints/BP_CameraShake.BP_CameraShake_C'"));
 	if (tempCam.Succeeded())
@@ -116,6 +123,9 @@ void ATpsPlayer::BeginPlay()
 	AMiniMap* miniMap = GetWorld()->SpawnActor<AMiniMap>(miniMapFactory);
 	miniMap->Init(this);
 	//miniMap->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
+
+	UGameOverUI* gameOverUI = CreateWidget<UGameOverUI>(GetWorld(), gameOverUIFactory);
+	gameOverUI->AddToViewport();
 
 }
 
