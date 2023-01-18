@@ -3,9 +3,9 @@
 
 #include "EnemyAnim.h"
 #include "Enemy.h"
+#include "TpsPlayer.h"
 
-
-void UEnemyAnim::AnimNotify_DieEnd()
+void UEnemyAnim::NativeBeginPlay()
 {
 	//GetOwningActor(); <<-------- Actor 를 가져온다.
 	/*AActor* actor = GetOwningActor();
@@ -15,8 +15,11 @@ void UEnemyAnim::AnimNotify_DieEnd()
 	APawn* pawn = TryGetPawnOwner();
 
 	//2. AEnemy 로 형변환한다.
-	AEnemy* enemy = Cast<AEnemy>(pawn);
+	enemy = Cast<AEnemy>(pawn);
+}
 
+void UEnemyAnim::AnimNotify_DieEnd()
+{
 	//3. enemy 가 가지고 있는 fsm 을 이용해서 bDieMove 를 true
 	enemy->fsm->bDieMove = true;
 
@@ -25,6 +28,6 @@ void UEnemyAnim::AnimNotify_DieEnd()
 
 void UEnemyAnim::AnimNotify_EnemyAttack()
 {
-	//1. 공격!!! 출력하자
-	UE_LOG(LogTemp, Error, TEXT("Attack!!!"));
+	//플레이어에게 Damage 를 주자
+	enemy->fsm->target->ReceiveDamage(1);
 }

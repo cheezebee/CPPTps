@@ -16,6 +16,12 @@ class CPPTPS_API UEnemyAnim : public UAnimInstance
 	GENERATED_BODY()
 
 public:
+	virtual void NativeBeginPlay() override;
+
+public:
+	UPROPERTY()
+	class AEnemy* enemy;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	EEnemyState state;
 
