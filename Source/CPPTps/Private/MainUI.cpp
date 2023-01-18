@@ -4,6 +4,8 @@
 #include "MainUI.h"
 #include <Components/TextBlock.h>
 #include <Components/ProgressBar.h>
+#include <Components/CanvasPanelSlot.h>
+#include <Components/Image.h>
 
 void UMainUI::NativeConstruct()
 {
@@ -14,6 +16,10 @@ void UMainUI::NativeConstruct()
 
 	//progress bar hp 가져오자
 	currHPBar = Cast<UProgressBar>(GetWidgetFromName(TEXT("_currHPBar")));
+
+	//rifle 이미지와 sniper 이미지 가져오자
+	rifle = Cast<UImage>(GetWidgetFromName(TEXT("_rifle")));
+	sniper = Cast<UImage>(GetWidgetFromName(TEXT("_sniper")));
 }
 
 void UMainUI::UpdateCurrHP(float curr, float max)
@@ -27,4 +33,30 @@ void UMainUI::UpdateCurrHP(float curr, float max)
 	
 	//Progress bar UI 갱신
 	currHPBar->SetPercent(hp);
+}
+
+void UMainUI::UpdateWeapon(bool useSniper)
+{
+	SetZOrderWeapon(useSniper, sniper);
+	SetZOrderWeapon(!useSniper, rifle);
+}
+
+void UMainUI::SetZOrderWeapon(bool bFoucs, class UImage* img)
+{
+	//CanvasPanelSlot 을 가져오자
+	UCanvasPanelSlot* slot = Cast<UCanvasPanelSlot>(img->Slot);
+	
+
+	//만약에 bFoucs 가 true
+	if (bFoucs == true)
+	{
+		//zorder 를 2로
+		slot->SetZOrder(2);	
+	}
+	//그렇지 않으면
+	else
+	{
+		//zorder 를 0로
+		slot->SetZOrder(0);
+	}
 }

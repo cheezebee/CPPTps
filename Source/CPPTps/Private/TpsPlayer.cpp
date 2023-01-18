@@ -16,6 +16,7 @@
 #include "PlayerMove.h"
 #include "PlayerFire.h"
 #include "MainUI.h"
+#include "Minimap.h"
 
 
 // Sets default values
@@ -93,6 +94,13 @@ ATpsPlayer::ATpsPlayer()
 		mainUIFactory = tempMainUI.Class;
 	}
 
+	//MiniMap 클래스 찾아오자
+	ConstructorHelpers::FClassFinder<AMinimap> tempMini(TEXT("Blueprint'/Game/Blueprints/BP_Minimap.BP_Minimap_C'"));
+	if (tempMini.Succeeded())
+	{
+		miniFactory = tempMini.Class;
+	}
+
 	//Camera Shake 블루프린트 가져오자
 	/*ConstructorHelpers::FClassFinder<UCameraShakeBase> tempCam(TEXT("Blueprint'/Game/Blueprints/BP_CameraShake.BP_CameraShake_C'"));
 	if (tempCam.Succeeded())
@@ -104,17 +112,24 @@ ATpsPlayer::ATpsPlayer()
 // Called when the game starts or when spawned
 void ATpsPlayer::BeginPlay()
 {
-	Super::BeginPlay();	
+	//MainUI 생성 후 Viewport 에 붙이자
+	mainUI = CreateWidget<UMainUI>(GetWorld(), mainUIFactory);
+	mainUI->AddToViewport();
+
+	Super::BeginPlay();
 
 	//CapsuleCompoenent 의 ECC_Visibility -> ECR_Block 로 셋팅
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
 	//현재 HP 를 최기화
 	currHP = maxHP;
+	prevHP = maxHP;
 
-	//MainUI 생성 후 Viewport 에 붙이자
-	mainUI = CreateWidget<UMainUI>(GetWorld(), mainUIFactory);
-	mainUI->AddToViewport();
+	//Minimap 생성하자
+	GetWorld()->SpawnActor<AMinimap>(
+		miniFactory, 
+		FVector(GetActorLocation().X, GetActorLocation().Y, 540),
+		FRotator(-90, 0, 0));
 
 	//bUseControllerRotationYaw = false;
 	//compArm->bUsePawnControlRotation = false;
@@ -125,6 +140,26 @@ void ATpsPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 		
+
+	prevHP = FMath::Lerp(prevHP, currHP, DeltaTime * 20);
+	mainUI->UpdateCurrHP(prevHP, maxHP);
+
+	//만약에 HP UI 갱신해야 한다면
+	//if (bUpdateHP == true)
+	//{
+	//	ratioHP += DeltaTime * 2;
+	//	//목적지에 도달했으면 초기화
+	//	if (ratioHP >= 1)
+	//	{
+	//		ratioHP = 1;
+	//		bUpdateHP = false;
+	//	}
+
+	//	//HP UI 를 생신하자
+	//	float hp = FMath::Lerp(prevHP, currHP, ratioHP);
+	//	mainUI->UpdateCurrHP(hp, maxHP);		
+	//}
+	
 }
 
 // Called to bind functionality to input
@@ -140,11 +175,16 @@ void ATpsPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 void ATpsPlayer::ReceiveDamage(float damage)
 {
+	//이전 HP 를 저장한다.
+	//prevHP = currHP;
+	bUpdateHP = true;
+	ratioHP = 0;
+
 	//현재 HP 를 damage 만큼 줄여준다.
 	currHP -= damage;
 
 	//HP UI 갱신
-	mainUI->UpdateCurrHP(currHP, maxHP);
+	//mainUI->UpdateCurrHP(currHP, maxHP);
 
 	//만약에 HP 가 0보다 같거나 작다면
 	if (currHP <= 0)
@@ -159,6 +199,5 @@ void ATpsPlayer::ReceiveDamage(float damage)
 		UE_LOG(LogTemp, Warning, TEXT("Curr HP : %f"), currHP);
 	}
 }
-
 
 

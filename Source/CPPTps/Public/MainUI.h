@@ -23,6 +23,14 @@ public:
 	UPROPERTY()
 	class UTextBlock* currHP;
 
+	UPROPERTY()
+	class UImage* rifle;
+	UPROPERTY()
+	class UImage* sniper;
+
 public:
 	void UpdateCurrHP(float curr, float max);
+
+	void UpdateWeapon(bool useSniper);
+	void SetZOrderWeapon(bool bFoucs, class UImage* img);
 };

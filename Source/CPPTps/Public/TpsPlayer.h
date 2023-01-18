@@ -57,6 +57,17 @@ public:
 	float currHP;
 	//최대 HP
 	float maxHP = 5;
+	//이전 HP
+	float prevHP;
+	//HP UI 를 갱신할 수 있니?
+	bool bUpdateHP = false;
+	//HP UI 줄어드는 비율
+	float ratioHP = 0.0f;
+
+
+	//미니맵 블루프린트 클래스
+	UPROPERTY()
+	TSubclassOf<class AMinimap> miniFactory;
 
 public:
 	void ReceiveDamage(float damage);	

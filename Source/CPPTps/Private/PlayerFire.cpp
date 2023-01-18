@@ -12,6 +12,7 @@
 #include <Kismet/GameplayStatics.h>
 #include "Enemy.h"
 #include "EnemyFSM.h"
+#include "MainUI.h"
 
 UPlayerFire::UPlayerFire()
 {	
@@ -201,6 +202,12 @@ void UPlayerFire::ChangeWeapon(bool useSniper)
 
 	me->compRifle->SetVisibility(!useSniper);
 	me->compSniper->SetVisibility(useSniper);
+
+	//무기 UI 갱신
+	//if (me->mainUI != nullptr)
+	{
+		me->mainUI->UpdateWeapon(useSniper);
+	}
 
 	////2-1 만약에 useSniper 가 true 이면
 	//if (useSniper == true)
