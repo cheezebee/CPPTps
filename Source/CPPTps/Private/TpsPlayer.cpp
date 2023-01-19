@@ -17,6 +17,7 @@
 #include "PlayerFire.h"
 #include "MainUI.h"
 #include "Minimap.h"
+#include "GameOverUI.h"
 
 
 // Sets default values
@@ -99,6 +100,13 @@ ATpsPlayer::ATpsPlayer()
 	if (tempMini.Succeeded())
 	{
 		miniFactory = tempMini.Class;
+	}
+
+	//GameOverUI 클래스 찾아오자
+	ConstructorHelpers::FClassFinder<UGameOverUI> tempGameOver(TEXT("WidgetBlueprint'/Game/Blueprints/BP_GameOverUI.BP_GameOverUI_C'"));
+	if (tempGameOver.Succeeded())
+	{
+		gameOverUIFactory = tempGameOver.Class;
 	}
 
 	//Camera Shake 블루프린트 가져오자
@@ -189,8 +197,9 @@ void ATpsPlayer::ReceiveDamage(float damage)
 	//만약에 HP 가 0보다 같거나 작다면
 	if (currHP <= 0)
 	{
-		//게임오버 (GameOver 출력)
-		UE_LOG(LogTemp, Warning, TEXT("GameOver!!!!"));
+		//게임오버 (GameOver UI 보이게 하자)
+		UGameOverUI* ui = CreateWidget<UGameOverUI>(GetWorld(), gameOverUIFactory);
+		ui->AddToViewport();
 	}
 	//그렇지 않다면
 	else

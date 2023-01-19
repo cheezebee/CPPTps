@@ -56,7 +56,7 @@ public:
 	//현재 HP
 	float currHP;
 	//최대 HP
-	float maxHP = 5;
+	float maxHP = 2;
 	//이전 HP
 	float prevHP;
 	//HP UI 를 갱신할 수 있니?
@@ -68,6 +68,10 @@ public:
 	//미니맵 블루프린트 클래스
 	UPROPERTY()
 	TSubclassOf<class AMinimap> miniFactory;
+
+	//게임오브 블루프린트 클래스
+	UPROPERTY()
+	TSubclassOf<class UGameOverUI> gameOverUIFactory;
 
 public:
 	void ReceiveDamage(float damage);	
