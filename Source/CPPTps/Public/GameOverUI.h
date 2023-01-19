@@ -19,16 +19,16 @@ public:
 
 public:
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	class UButton* BtnRetry;
 
-	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetAnim), Transient)
 	class UWidgetAnimation* BtnIdle;
 
-	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetAnim), Transient)
 	class UWidgetAnimation* BtnHover;
 
-	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetAnim), Transient)
 	class UWidgetAnimation* BtnClick;
 
 public:
@@ -40,7 +40,13 @@ public:
 	UFUNCTION()
 	void UnHover();
 
+	//눌렀을 때
+	UFUNCTION()
+	void OnPress();
+
 	//클릭했을 때
 	UFUNCTION()
 	void OnClick();
+
+	
 };
